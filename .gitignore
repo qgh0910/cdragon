@@ -1,0 +1,44 @@
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python cache / build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.envrc
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+results/
+
+# Runtime data: RAG vector stores, uploads, memories, local app state
+data/
+
+# Local project notes and stage progress
+my_docs/
+
+# Local notebooks
+.ipynb_checkpoints/
