@@ -120,6 +120,32 @@ class Settings(BaseSettings):
         description="允许上传的文件扩展名，多个扩展名用英文逗号分隔"
     )
 
+    # LPOS 合同结构化解析配置
+    lpos_contract_parse_max_chars: int = Field(
+        default=200000,
+        description="单份合同结构化解析的最大字符数"
+    )
+    lpos_contract_parse_max_clauses: int = Field(
+        default=300,
+        description="单份合同最多返回的条款数量"
+    )
+    lpos_contract_parse_clause_preview_chars: int = Field(
+        default=1200,
+        description="单条合同条款预览的最大字符数"
+    )
+    lpos_contract_parse_source_preview_chars: int = Field(
+        default=160,
+        description="合同来源定位预览的最大字符数"
+    )
+    lpos_contract_parse_use_llm: bool = Field(
+        default=False,
+        description="是否启用 LLM 辅助合同结构化抽取"
+    )
+    lpos_contract_parse_llm_timeout: int = Field(
+        default=60,
+        description="LLM 辅助合同结构化抽取超时时间（秒）"
+    )
+
     # 认证与会话配置
     auth_secret_key: str = Field(
         default="",

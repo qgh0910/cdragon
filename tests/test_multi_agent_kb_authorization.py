@@ -24,12 +24,21 @@ class _FakeCollaboration:
 
     instances: list["_FakeCollaboration"] = []
 
-    def __init__(self, llm_client, mode, verbose=True, max_rounds=5, rag_agent=None):
+    def __init__(
+        self,
+        llm_client,
+        mode,
+        verbose=True,
+        max_rounds=5,
+        rag_agent=None,
+        execution_policy=None,
+    ):
         self.llm_client = llm_client
         self.mode = mode
         self.verbose = verbose
         self.max_rounds = max_rounds
         self.rag_agent = rag_agent
+        self.execution_policy = execution_policy
         self.agents = []
         self.collaborate_calls = []
         self.__class__.instances.append(self)
@@ -103,6 +112,11 @@ def _create_regular_user(username: str, password: str = "user-secret") -> dict:
         password_hash=generate_password_hash(password),
         role="user",
     )
+
+
+def _agent_names(agents) -> list[str]:
+    """提取协作运行时实际注册的 Agent 名称。"""
+    return [agent.name for agent in agents]
 
 
 def test_multi_agent_collaborate_uses_authorized_kb_ids_and_public_sources(tmp_path, monkeypatch):
@@ -249,6 +263,128 @@ def test_multi_agent_unauthorized_kb_id_does_not_start_runtime(tmp_path, monkeyp
 
     assert non_stream_response.status_code == 404
     assert stream_response.status_code == 404
+    assert _FakeLLMClient.calls == []
+    assert _FakeCollaboration.instances == []
+    assert rag_calls == []
+
+
+def test_selecting_rag_agent_does_not_expand_knowledge_base_visibility(
+    tmp_path,
+    monkeypatch,
+):
+    """选择 legal_researcher 只能使用请求内已授权知识库，不应扩大可见范围。"""
+    client, rag_calls = _configure_multi_agent_kb_test_app(tmp_path, monkeypatch)
+    user = _create_regular_user("reviewer", "user-secret")
+    other = _create_regular_user("other", "other-secret")
+    public_kb = registry.create_knowledge_base(
+        scope="public",
+        display_name="公共法规库不应自动加入",
+        created_by="usr_admin",
+    )
+    user_kb = registry.create_knowledge_base(
+        scope="user",
+        owner_user_id=user["id"],
+        display_name="我的法规库",
+        created_by=user["id"],
+    )
+    other_kb = registry.create_knowledge_base(
+        scope="user",
+        owner_user_id=other["id"],
+        display_name="他人法规库",
+        created_by=other["id"],
+    )
+    _login(client, "reviewer", "user-secret")
+
+    response = client.post(
+        "/api/multi-agent/collaborate",
+        json={
+            "input_text": "请检索法律依据",
+            "team_type": "legal_contract_review",
+            "mode": "hierarchical",
+            "legal_task_type": "legal_research",
+            "selected_agent_names": ["legal_researcher"],
+            "enable_rag": True,
+            "knowledge_base_ids": [user_kb["id"]],
+            "include_public_knowledge": False,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert _agent_names(_FakeCollaboration.instances[-1].agents) == [
+        "contract_reviewer",
+        "legal_researcher",
+    ]
+    assert [item["kb_id"] for item in body["metadata"]["knowledge_bases"]] == [
+        user_kb["id"]
+    ]
+    assert public_kb["id"] not in {
+        item["kb_id"] for item in body["metadata"]["knowledge_bases"]
+    }
+    assert other_kb["id"] not in {
+        item["kb_id"] for item in body["metadata"]["knowledge_bases"]
+    }
+    assert rag_calls == [user_kb["collection_name"]]
+    assert _FakeLLMClient.calls == ["init"]
+
+
+def test_invalid_legal_task_type_fails_before_rag_llm_or_collaboration(
+    tmp_path,
+    monkeypatch,
+):
+    """未知法律任务应在 RAG、LLM 和协作对象初始化前返回 400。"""
+    client, rag_calls = _configure_multi_agent_kb_test_app(tmp_path, monkeypatch)
+    registry.create_knowledge_base(
+        scope="public",
+        display_name="公共法规库",
+        created_by="usr_admin",
+    )
+    _login(client)
+
+    response = client.post(
+        "/api/multi-agent/collaborate",
+        json={
+            "input_text": "请审查合同",
+            "team_type": "legal_contract_review",
+            "legal_task_type": "unknown_task",
+            "enable_rag": True,
+            "include_public_knowledge": True,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "invalid_legal_task_type"
+    assert _FakeLLMClient.calls == []
+    assert _FakeCollaboration.instances == []
+    assert rag_calls == []
+
+
+def test_invalid_stream_legal_agent_name_fails_before_rag_llm_or_collaboration(
+    tmp_path,
+    monkeypatch,
+):
+    """流式非法法律 Agent 选择也应在运行时初始化前返回 400。"""
+    client, rag_calls = _configure_multi_agent_kb_test_app(tmp_path, monkeypatch)
+    registry.create_knowledge_base(
+        scope="public",
+        display_name="公共案例库",
+        created_by="usr_admin",
+    )
+    _login(client)
+
+    response = client.post(
+        "/api/multi-agent/collaborate/stream",
+        json={
+            "input_text": "请审查合同",
+            "team_type": "legal_contract_review",
+            "selected_agent_names": ["not_a_legal_agent"],
+            "enable_rag": True,
+            "include_public_knowledge": True,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "invalid_legal_agent_name"
     assert _FakeLLMClient.calls == []
     assert _FakeCollaboration.instances == []
     assert rag_calls == []

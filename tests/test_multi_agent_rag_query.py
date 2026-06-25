@@ -2,6 +2,7 @@
 
 from langchain_core.documents import Document
 
+from src.shuyixiao_agent import web_app
 from src.shuyixiao_agent.agents.multi_agent_collaboration import (
     AgentProfile,
     AgentRole,
@@ -187,3 +188,80 @@ def test_full_input_text_is_preserved_for_agent_response():
     assert "合同全文开始" in sent_content
     assert "合同全文结束" in sent_content
     assert sent_content.count("重要合同正文") == 3000
+
+
+def test_rag_query_prioritizes_legal_task_type_and_excludes_full_stage_outputs():
+    """法律任务类型不能被噪声 context 挤出 RAG query，阶段成果不能完整进入 query。"""
+    collaboration = _collaboration()
+    agent = _agent("compliance_checker", AgentRole.REVIEWER)
+    noisy_context = {
+        f"unknown_{index}": "噪声字段" * 120
+        for index in range(12)
+    }
+    noisy_context.update(
+        {
+            "contract_text": "合同开头" + ("完整合同正文" * 1000) + "合同尾部不得进入RAG",
+            "coordinator_analysis": (
+                "阶段开头" + ("完整阶段成果" * 1000) + "阶段尾部不得进入RAG"
+            ),
+            "all_work": {"contract_reviewer": "完整工作集不得进入RAG" * 200},
+            "legal_task_type": "compliance_analysis",
+            "review_focus": "合规红线",
+        }
+    )
+
+    query = collaboration._build_rag_query(
+        agent,
+        "审查合同合规风险",
+        context=noisy_context,
+    )
+
+    assert len(query) <= collaboration.RAG_QUERY_MAX_CHARS
+    context_summary = query.split("上下文摘要:", 1)[1].strip()
+    assert len(context_summary) <= collaboration.RAG_QUERY_CONTEXT_MAX_CHARS
+    assert (
+        "legal_task_type=compliance_analysis" in query
+        or "legal_task_type: compliance_analysis" in query
+    )
+    assert "review_focus: 合规红线" in query
+    assert "合同尾部不得进入RAG" not in query
+    assert "阶段尾部不得进入RAG" not in query
+    assert "完整工作集不得进入RAG" not in query
+
+
+def test_rag_query_uses_server_context_and_ignores_client_forged_outputs():
+    """RAG query 应消费服务端规范化 context，而不是客户端伪造阶段成果。"""
+    collaboration = _collaboration()
+    agent = _agent("legal_researcher", AgentRole.ADVISOR)
+    raw_context = {
+        "legal_task_type": "forged_task",
+        "contract_type": "采购合同",
+        "review_focus": "争议解决",
+        "contract_text": "合同开头" + ("完整合同正文" * 1000) + "合同尾部不得进入RAG",
+        "contract_structure": {
+            "server_path": "/private/uploads/full-structure.json",
+            "text": "完整结构不得进入RAG" * 200,
+        },
+        "page_index": {"page": "完整页索引不得进入RAG" * 200},
+        "coordinator_analysis": "客户端伪造成果不得进入RAG" * 200,
+    }
+    safe_context = web_app._build_legal_base_context(
+        raw_context,
+        "legal_research",
+    )
+
+    query = collaboration._build_rag_query(
+        agent,
+        "请检索法律依据",
+        context=safe_context,
+    )
+
+    assert "legal_task_type: legal_research" in query
+    assert "forged_task" not in query
+    assert "采购合同" in query
+    assert "争议解决" in query
+    assert "合同尾部不得进入RAG" not in query
+    assert "完整结构不得进入RAG" not in query
+    assert "完整页索引不得进入RAG" not in query
+    assert "客户端伪造成果不得进入RAG" not in query
+    assert "/private/uploads" not in query

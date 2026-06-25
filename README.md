@@ -1,303 +1,183 @@
-# 法律多智能体助手
+# CDragon 法律多智能体合同审查助手
 
-基于 LangGraph、LangChain 和 DashScope 的法律多智能体合同审查助手
+基于 LangGraph、LangChain、FastAPI、DashScope 和 ChromaDB 的法律多智能体合同审查系统。
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## 📖 简介
+## 项目定位
 
-法律多智能体助手是在开源 `shuyixiao-agent` 基础上二次开发的合同审查与法律生产力系统。项目复用 LangGraph 多智能体协作框架，结合 DashScope 模型服务和 RAG 知识库能力，面向合同审查、风险识别、法律依据检索、合规分析、修改建议和审计留痕等场景。
+CDragon 是在开源 `shuyixiao-agent` 通用 Agent 框架基础上二次开发的法律场景项目。当前主线不再是通用聊天机器人或工具演示，而是面向企业法务、合同管理和合规审查的多智能体助手。
 
-### ✨ 核心特性
+项目重点支持：
 
-- 🚀 **LangGraph 框架**：基于业界主流的 Agent 框架构建
-- 🤖 **DashScope 集成**：支持 DeepSeek-V3、Qwen、GLM-4 等多种模型
-- ⚙️ **灵活配置**：支持为不同任务配置不同模型，云端/本地自由切换
-- 📖 **RAG 系统**：完整的检索增强生成系统
-  - 多模态检索（向量、关键词、混合）
-  - 智能查询优化和重写
-  - 重排序机制提升召回质量
-  - 流式响应支持
-- 🛠️ **工具系统**：
-  - 13个基础工具（时间、计算、编码等）
-  - 10个AI驱动的智能工具（代码审查、创意生成、决策分析等）
-- 🔗 **Prompt Chaining**：提示链设计模式 ⭐ 新功能
-  - 5个预定义场景（文档生成、代码审查、研究规划、故事创作、产品分析）
-  - 模块化、可控、高质量的输出
-  - 支持自定义提示链
-  - Web界面和命令行双模式
-- 🎨 **Web 界面**：现代化的交互界面，支持 RAG 知识库管理
-- 📚 **完整文档**：详细的 API 文档和使用指南
-- 💡 **丰富示例**：11个实用示例快速上手
+- 合同上传、文本解析和结构化摘要
+- 条款级风险识别和风险分级
+- 法律依据、案例、合同模板和企业制度检索
+- 合规风险分析和监管红线提示
+- 修改建议、替代条款和法律文书初稿
+- 多智能体协作过程、合同解析事件和审计留痕
+- Web 前端、FastAPI 接口、RAG 知识库和权限控制
 
-### 🎯 技术栈
+> 注意：本项目输出仅作为合同审查辅助信息，不构成正式律师意见。涉及签署、诉讼、监管处罚、重大交易或个人敏感信息时，应由具备资质的法律专业人员复核。
 
-- **框架**：LangGraph、LangChain
-- **AI 模型**：DashScope (DeepSeek-V3, Qwen, GLM-4 等)
-- **设计模式**：ReAct（推理与行动）、Prompt Chaining（提示链）、Reflection（反思）、Planning（规划）
-- **RAG 组件**：ChromaDB、Sentence Transformers、BM25、Cross-Encoder
-- **编程语言**：Python 3.12+
-- **Web 框架**：FastAPI、Uvicorn
-- **包管理**：Poetry
+## 当前核心模块
 
-## 🧠 ReAct 框架：推理与行动的协同
+### 法律多智能体团队
 
-本项目深度实现了 **ReAct (Reasoning and Acting)** 框架的核心思想，这是 Shunyu Yao 等人在 ICLR 2023 论文 "ReAct: Synergizing Reasoning and Acting in Language Models" 中提出的认知框架。
+核心入口：`src/shuyixiao_agent/agents/multi_agent_collaboration.py`
 
-### 🎯 ReAct 核心概念
+法律团队 `LegalContractReviewTeam` 包含 6 个专业 Agent：
 
-ReAct 框架将大语言模型的能力扩展到推理和行动的协同循环中：
+| Agent | 角色 | 主要职责 |
+| --- | --- | --- |
+| `contract_reviewer` | 合同审查协调员 | 识别合同背景、拆解任务、汇总风险和签署建议 |
+| `clause_risk_analyzer` | 条款风险分析师 | 识别条款风险、风险等级、风险原因和后果 |
+| `legal_researcher` | 法律依据检索员 | 通过 RAG 检索法规、案例、模板和企业知识库 |
+| `drafting_specialist` | 法律文本起草员 | 生成修改建议、替代条款和文书草稿 |
+| `compliance_checker` | 合规审查员 | 映射监管规则、企业红线和整改建议 |
+| `audit_recorder` | 审计留痕员 | 检查引用完整性、输出可追溯性和过程摘要 |
 
-```
-┌─────────────────────────────────────────────────┐
-│  Reasoning (推理)                                │
-│  思考：我需要做什么？如何完成任务？              │
-└──────────────────┬──────────────────────────────┘
-                   ↓
-┌─────────────────────────────────────────────────┐
-│  Acting (行动)                                   │
-│  执行：调用工具、执行操作、获取信息              │
-└──────────────────┬──────────────────────────────┘
-                   ↓
-┌─────────────────────────────────────────────────┐
-│  Observation (观察)                              │
-│  观察：分析执行结果，判断是否需要继续           │
-└──────────────────┬──────────────────────────────┘
-                   ↓
-         ┌─────────┴─────────┐
-         │ 任务完成？         │
-         └─────┬───────┬─────┘
-          否 ↓         ↓ 是
-    (循环推理)      (结束)
-```
+前端和后端共同支持 9 类法律任务模板：
 
-### 📦 项目中的 ReAct 实现
+- `contract_review`：合同审查
+- `risk_identification`：合同风险识别
+- `revision_suggestions`：修改建议与替代条款
+- `legal_research`：法律依据检索
+- `compliance_analysis`：合规风险分析
+- `review_summary`：审查结论摘要
+- `legal_document_generation`：法律文书生成
+- `redline_comparison`：红线对比
+- `approval_flow_suggestion`：审批流程建议
 
-#### 1. **ToolAgent** - 经典 ReAct 模式
+服务端会强制保留 `contract_reviewer` 主控 Agent，并在 `metadata.agent_selection` 中返回本次实际参与者、选择来源和能力缺口提示。
 
-最直接的 ReAct 实现，通过 LangGraph 状态图实现推理-行动循环：
+### LPOS 合同上传与结构化解析
 
-```python
-from src.shuyixiao_agent.agents.tool_agent import ToolAgent
-from src.shuyixiao_agent.tools import get_basic_tools
+核心入口：
 
-# 创建支持工具调用的 Agent
-agent = ToolAgent()
+- `src/shuyixiao_agent/lpos/contract_parser.py`
+- `src/shuyixiao_agent/lpos/contract_extractor.py`
+- `src/shuyixiao_agent/lpos/pageindex.py`
+- `src/shuyixiao_agent/lpos/audit.py`
+- `src/shuyixiao_agent/web_app.py`
 
-# 注册工具（Agent 的"行动"能力）
-for tool in get_basic_tools():
-    agent.register_tool(**tool)
+当前合同解析链路：
 
-# ReAct 循环：推理 → 选择工具 → 执行 → 观察结果 → 继续推理
-response = agent.run("现在几点了？帮我计算 25 * 4 + 10")
-```
+1. 登录用户上传合同文件，文件保存到 user-scoped 目录。
+2. `upload_registry` 登记 `file_id`、owner、租户和存储路径。
+3. `DocumentLoader` 抽取 PDF、DOCX、Markdown、TXT 等文本。
+4. `pageindex` 生成来源定位块，避免把服务端绝对路径注入 prompt。
+5. `contract_extractor` 规则优先抽取合同类型、主体、金额、期限、条款和关键条款摘要。
+6. `audit` 写入上传、解析、越权、失败等合同事件审计日志。
+7. 前端展示结构化摘要，多智能体只接收安全摘要和必要文件标识。
 
-**执行流程**：
-```
-1. [推理] Agent 分析："需要获取时间和进行计算"
-2. [行动] 调用 get_current_time 工具
-3. [观察] 获得时间结果："2024-01-01 12:00:00"
-4. [推理] Agent 继续分析："现在需要计算数学表达式"
-5. [行动] 调用 calculate 工具，参数："25 * 4 + 10"
-6. [观察] 获得计算结果："110"
-7. [推理] Agent 判断任务完成，生成最终回复
-```
+默认响应不会返回完整条款正文和完整 pageindex。需要调试时可通过请求参数显式打开。
 
-#### 2. **ToolUseAgent** - 增强版 ReAct
+### RAG 知识库
 
-智能工具选择和参数推理，更高级的 ReAct 实现：
+核心入口：
 
-```python
-from src.shuyixiao_agent.agents.tool_use_agent import ToolUseAgent
-from src.shuyixiao_agent.tools.predefined_tools import PredefinedToolsRegistry
+- `src/shuyixiao_agent/rag/`
+- `src/shuyixiao_agent/kb/`
+- `src/shuyixiao_agent/web_app.py`
 
-# 创建智能工具使用 Agent
-agent = ToolUseAgent(llm_client, verbose=True)
-PredefinedToolsRegistry.register_all_tools(agent)
+RAG 系统支持：
 
-# 自动推理工具选择和参数
-result = await agent.process_request("分析 sales.csv 文件中的销售数据")
-```
+- ChromaDB 持久化向量库，默认目录为 `data/chroma`
+- 用户知识库和公共知识库
+- 知识库权限校验，普通用户只能读写自己的用户知识库
+- 管理员维护公共法规、案例、模板和企业制度资料
+- 向量检索、关键词检索、混合检索、查询优化和重排序
+- 法律团队中的 `legal_researcher` 和 `compliance_checker` 接收 RAG 上下文
 
-**智能推理过程**：
-```
-1. [推理] 分析任务："需要读取CSV文件并分析数据"
-   - 选择工具：read_file
-   - 推理参数：{"file_path": "sales.csv"}
-   - 置信度：0.95
+设计原则：RAG 负责提供可核验资料和上下文，不直接替代法律 Agent 生成最终结论。
 
-2. [行动] 执行 read_file("sales.csv")
-3. [观察] 获得文件内容
+### Web/API 后端
 
-4. [推理] 继续分析："需要解析CSV格式"
-   - 选择工具：parse_csv
-   - 推理参数：{"csv_content": "..."}
-   
-5. [行动] 执行 parse_csv(...)
-6. [观察] 获得结构化数据
+核心入口：`src/shuyixiao_agent/web_app.py`
 
-7. [推理] 最后分析："需要统计销售总额"
-   - 选择工具：aggregate_data
-   
-8. [行动] 执行聚合统计
-9. [观察] 获得分析结果
-10. [完成] 返回完整分析报告
-```
+主要接口：
 
-#### 3. **PlanningAgent** - ReAct + 规划
+| 能力 | 接口 |
+| --- | --- |
+| 健康检查 | `GET /api/health` |
+| 登录与会话 | `POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/auth/me` |
+| 知识库管理 | `GET/POST /api/kb/collections`、`POST /api/kb/collections/{kb_id}/upload` |
+| RAG 查询 | `POST /api/rag/query`、`POST /api/rag/query/stream` |
+| 合同上传解析 | `POST /api/lpos/contracts/upload`、`POST /api/lpos/contracts/parse` |
+| 多智能体团队 | `GET /api/multi-agent/teams`、`GET /api/multi-agent/modes` |
+| 多智能体协作 | `POST /api/multi-agent/collaborate`、`POST /api/multi-agent/collaborate/stream` |
 
-结合规划能力的 ReAct 实现：
+业务 `/api/*` 默认需要登录；登录成功后使用 HttpOnly Cookie 保存 session，非 GET 请求需要携带 CSRF token。
 
-```python
-from src.shuyixiao_agent.agents.planning_agent import PlanningAgent
+### Web 前端
 
-agent = PlanningAgent(llm_client, verbose=True)
+核心入口：`src/shuyixiao_agent/static/index.html`
 
-# ReAct 循环中加入规划步骤
-result = agent.plan_and_execute(
-    goal="创建一个Python项目，包含代码、测试和文档",
-    strategy=PlanningStrategy.DEPENDENCY_BASED
-)
-```
+前端是一个单文件应用，当前重点能力包括：
 
-**规划式 ReAct**：
-```
-[推理阶段] 
-→ 分解目标为多个子任务
-→ 分析任务依赖关系
-→ 制定执行计划
+- 登录态初始化和 CSRF 请求封装
+- 知识库选择、公共知识库开关和权限提示
+- 合同上传、解析状态、结构化摘要展示
+- 法律任务模板、Agent 选择区和能力缺口提示
+- SSE 流式多智能体协作
+- 服务端权威参与者 metadata 展示
+- 审查结果复制、下载和人工复核声明
 
-[行动阶段]
-→ 按依赖顺序执行任务
-→ 任务1: 创建项目结构
-→ 任务2: 编写核心代码
-→ 任务3: 编写测试用例
-→ 任务4: 生成文档
+## 技术栈
 
-[观察阶段]
-→ 监控任务执行状态
-→ 动态调整计划
-→ 处理失败和重试
-```
+- Python `>=3.12`
+- FastAPI、Uvicorn
+- LangGraph、LangChain
+- DashScope 兼容 OpenAI 接口模型，默认推荐 `qwen-plus`
+- ChromaDB、Sentence Transformers、BM25、Cross-Encoder
+- SQLite，用于认证、知识库 registry、上传登记和审计日志
+- 单文件 HTML/CSS/JavaScript 前端
 
-### 🆚 对比：传统实现 vs 本项目
+包名目前仍沿用上游项目的 `shuyixiao_agent`，这是为了减少迁移成本。项目业务定位以本 README 和 `AGENTS.md` 为准。
 
-| 维度 | ReAct 论文示例 | 本项目实现 |
-|------|---------------|-----------|
-| **状态管理** | 文本拼接 | LangGraph 状态图 |
-| **推理方式** | 直接提示词 | 智能工具选择 + 参数推理 |
-| **工具调用** | 手动解析 | LangChain 工具集成 |
-| **可扩展性** | 有限 | 20+ 工具，6大类别 |
-| **可视化** | 文本日志 | Web 界面 + 执行追踪 |
-| **并发执行** | 不支持 | 支持异步和并行 |
-| **错误处理** | 基础 | 完整的重试和恢复机制 |
+## 快速开始
 
-### 🎨 ReAct 可视化界面
-
-Web 界面完整展示 ReAct 执行过程：
+### 1. 准备环境
 
 ```bash
-python run_web.py
-# 访问 http://localhost:8000
-# 选择 "🔧 Tool Use Agent" 标签页
+git clone <your-repo-url>
+cd cdragon
+
+python -m venv .venv
+source .venv/bin/activate
+
+pip install -r requirements.txt
 ```
 
-界面特性：
-- ✅ 实时显示推理过程
-- ✅ 展示工具选择理由
-- ✅ 可视化执行步骤
-- ✅ 参数推理详情
-- ✅ 置信度评分
-- ✅ 执行历史追踪
-
-### 📚 ReAct 相关示例
+也可以使用 Poetry：
 
 ```bash
-# 基础 ReAct 示例（ToolAgent）
-python examples/02_tool_agent.py
-
-# 高级 ReAct 示例（ToolUseAgent）
-python examples/15_tool_use_agent_demo.py
-
-# 规划式 ReAct（PlanningAgent）
-python examples/16_planning_agent_demo.py
-```
-
-### 🔬 ReAct 的优势
-
-1. **更强的问题解决能力**
-   - 将复杂任务分解为可执行步骤
-   - 通过工具调用获取实时信息
-   - 基于观察结果动态调整策略
-
-2. **更好的可解释性**
-   - 清晰的推理过程
-   - 明确的工具选择理由
-   - 完整的执行追踪
-
-3. **更高的准确性**
-   - 避免幻觉（通过实际工具调用）
-   - 实时数据验证
-   - 多轮迭代优化
-
-### 🎓 深入学习
-
-- **论文原文**: [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629)
-- **架构文档**: [docs/langgraph_architecture.md](docs/LangGraph 架构详解.md)
-- **工具文档**: [docs/tools_reference.md](docs/工具参考文档.md)
-- **API 参考**: [docs/api_reference.md](docs/API 参考文档.md)
-
-## 🚀 快速开始
-
-### 1. 环境准备
-
-**系统要求**
-- Python >= 3.12
-- Poetry 或 pip
-- DashScope API Key
-
-**获取 API Key**
-1. 访问 [阿里云百炼控制台](https://bailian.console.aliyun.com/)
-2. 注册/登录账号
-3. 开通模型服务并创建 DashScope API Key
-4. 按需开通对应模型调用权限
-
-### 2. 安装
-
-```bash
-# 克隆仓库
-git clone https://github.com/your-username/shuyixiao-agent.git
-cd shuyixiao-agent
-
-# 使用 Poetry 安装（推荐）
 poetry install
 poetry shell
-
-# 或使用 pip 安装
-pip install -e .
 ```
 
-### 3. 配置
+### 2. 配置环境变量
 
 ```bash
-# 复制环境变量示例文件
-cp env.example .env
-
-# 编辑 .env 文件，配置你的 API Key
-# DASHSCOPE_API_KEY=your_api_key_here
+cp .env.example .env
 ```
 
-**核心配置项：**
+至少需要配置：
 
 ```bash
-# 必填：API 密钥
-DASHSCOPE_API_KEY=your_api_key_here
-
-# 主对话模型（默认：qwen-plus）
+DASHSCOPE_API_KEY=your_dashscope_api_key
 DASHSCOPE_MODEL=qwen-plus
+AUTH_SECRET_KEY=replace-with-a-random-secret
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=change-me-before-sharing
+AUTH_COOKIE_SECURE=false
+```
 
-# RAG 配置（推荐使用云端服务，启动更快）
+RAG 推荐配置：
+
+```bash
 USE_CLOUD_EMBEDDING=true
 CLOUD_EMBEDDING_MODEL=text-embedding-v4
 USE_CLOUD_RERANKER=true
@@ -305,343 +185,206 @@ CLOUD_RERANKER_BASE_URL=https://dashscope.aliyuncs.com/compatible-api/v1
 CLOUD_RERANKER_MODEL=qwen3-rerank
 ```
 
-💡 查看 [模型配置文档](docs/模型配置指南.md) 了解高级配置
-
-### 4. 启动 Web 界面（推荐）
+LPOS 合同解析可选配置：
 
 ```bash
-# 方式 1：自动启动（推荐，自动选择可用端口）
+LPOS_CONTRACT_PARSE_MAX_CHARS=200000
+LPOS_CONTRACT_PARSE_MAX_CLAUSES=300
+LPOS_CONTRACT_PARSE_CLAUSE_PREVIEW_CHARS=1200
+LPOS_CONTRACT_PARSE_SOURCE_PREVIEW_CHARS=160
+LPOS_CONTRACT_PARSE_USE_LLM=false
+LPOS_CONTRACT_PARSE_LLM_TIMEOUT=60
+```
+
+不要把真实的 `.env`、API Key、管理员密码、合同原文或客户资料提交到仓库。
+
+### 3. 启动服务
+
+推荐本地启动：
+
+```bash
 python run_web_auto.py
+```
 
-# 方式 2：标准启动
+标准启动脚本：
+
+```bash
 python run_web.py
-
-# 浏览器访问
-http://localhost:8000
 ```
 
-**法律多智能体助手功能：**
-- ✅ 流式对话输出
-- ✅ Markdown 渲染（代码高亮、表格等）
-- ✅ 法律多智能体合同审查
-- ✅ 合同条款风险识别
-- ✅ 法律依据与合规知识库检索
-- ✅ 对话历史管理
-- ✅ RAG 知识库管理
-- ✅ 文档上传与检索
-
-### 5. 或运行示例代码
+也可以直接启动 FastAPI：
 
 ```bash
-# 基础示例
-python examples/01_simple_chat.py          # 简单对话
-python examples/02_tool_agent.py           # 工具调用
-python examples/03_custom_tool.py          # 自定义工具
-python examples/04_api_client.py           # API 客户端
-python examples/05_all_tools_demo.py       # 所有工具演示
-
-# AI 智能工具
-python examples/06_ai_powered_tools_demo.py
-
-# RAG 示例
-python examples/07_rag_basic_usage.py      # RAG 基础
-python examples/08_rag_file_upload.py      # 文件上传
-python examples/09_rag_streaming.py        # 流式响应
-
-# Prompt Chaining 示例 ⭐ 新功能
-python examples/10_prompt_chaining_demo.py    # 完整功能（5个场景）
-python examples/11_prompt_chaining_simple.py  # 快速体验（3个示例）
+PYTHONPATH=src python -m uvicorn shuyixiao_agent.web_app:app --host 127.0.0.1 --port 8000
 ```
 
-## 📂 项目结构
+访问地址：
 
-```
-shuyixiao-agent/
-├── src/shuyixiao_agent/       # 主代码
-│   ├── agents/                # Agent 实现
-│   │   ├── simple_agent.py   # 简单对话 Agent
-│   │   ├── tool_agent.py     # 工具调用 Agent
-│   │   └── prompt_chaining_agent.py # 提示链 Agent ⭐
-│   ├── tools/                 # 工具集
-│   │   ├── basic_tools.py    # 基础工具（13个）
-│   │   └── ai_powered_tools.py # AI智能工具（10个）
-│   ├── rag/                   # RAG 模块
-│   │   ├── embeddings.py      # 嵌入模型
-│   │   ├── vector_store.py    # 向量存储
-│   │   ├── retrievers.py      # 检索器
-│   │   ├── query_optimizer.py # 查询优化
-│   │   └── rag_agent.py       # RAG Agent
-│   ├── config.py              # 配置管理
-│   ├── gitee_ai_client.py    # API 客户端
-│   ├── web_app.py             # Web 应用
-│   └── static/                # 前端资源
-├── examples/                  # 示例代码（11个）
-├── docs/                      # 文档
-│   ├── prompt_chaining_guide.md # Prompt Chaining 指南 ⭐
-│   └── ...                    # 其他文档
-├── data/chroma/              # 向量数据库（自动创建）
-├── run_web.py                 # Web 启动脚本
-├── run_web_auto.py            # 自动化启动脚本
-├── PROMPT_CHAINING_README.md  # Prompt Chaining 快速开始 ⭐
-├── .env.example               # 环境变量示例
-└── README.md                  # 本文件
-```
+- Web 界面：`http://127.0.0.1:8000/` 或启动脚本输出的端口
+- API 文档：`http://127.0.0.1:8000/docs`
+- 健康检查：`http://127.0.0.1:8000/api/health`
 
-## 💡 使用示例
+`run_web.py` 当前默认端口为 `8001`；`run_web_auto.py` 会从 `8000` 开始自动选择可用端口。
 
-### 简单对话
+### 4. 典型使用流程
 
-```python
-from src.shuyixiao_agent import SimpleAgent
-from dotenv import load_dotenv
+1. 使用 `.env` 中的初始管理员账号登录。
+2. 在知识库页面创建用户知识库或公共知识库。
+3. 上传法规、案例、合同模板、企业制度或合规红线资料。
+4. 上传合同文件，确认解析出的合同类型、主体、金额、期限和关键条款摘要。
+5. 选择法律任务模板，例如合同审查、风险识别或修改建议。
+6. 按需要调整参与 Agent，选择知识库，发起流式多智能体协作。
+7. 查看报告、各 Agent 贡献、引用来源、能力缺口和人工复核提示。
 
-load_dotenv()
+## API 示例
 
-# 创建 Agent
-agent = SimpleAgent(
-    system_message="你是一个友好的AI助手"
-)
+### 法律多智能体协作
 
-# 开始对话
-response = agent.chat("Python 有什么特点？")
-print(response)
+```json
+{
+  "input_text": "请审查这份租赁合同，重点关注付款、违约责任和解除条款。",
+  "team_type": "legal_contract_review",
+  "mode": "hierarchical",
+  "legal_task_type": "contract_review",
+  "selected_agent_names": [
+    "contract_reviewer",
+    "clause_risk_analyzer",
+    "legal_researcher",
+    "compliance_checker"
+  ],
+  "enable_rag": true,
+  "knowledge_base_ids": ["kb_xxxxxxxxxxxx"],
+  "include_public_knowledge": true,
+  "context": {
+    "uploaded_file_id": "20260616_120000_abcdef123456",
+    "uploaded_file_name": "租赁合同.docx",
+    "contract_structure_summary": {
+      "contract_type": "租赁合同",
+      "clause_count": 12
+    }
+  }
+}
 ```
 
-### 工具调用
+### 合同解析
 
-```python
-from src.shuyixiao_agent.agents.tool_agent import ToolAgent
-from src.shuyixiao_agent.tools import get_basic_tools
-
-agent = ToolAgent()
-
-# 批量注册所有基础工具
-for tool in get_basic_tools():
-    agent.register_tool(**tool)
-
-# 使用工具
-response = agent.run("现在几点了？帮我计算 25 * 4 + 10")
-print(response)
+```json
+{
+  "file_id": "20260616_120000_abcdef123456",
+  "tenant_id": "default",
+  "parse_structure": true,
+  "include_clause_content": false,
+  "include_page_index": false
+}
 ```
 
-### RAG 检索增强
+更多接口细节见 [API 参考文档](docs/API%20参考文档.md)。
 
-```python
-from src.shuyixiao_agent import RAGAgent
+## 项目结构
 
-# 创建 RAG Agent
-agent = RAGAgent(
-    collection_name="my_knowledge",
-    use_reranker=True,
-    retrieval_mode="hybrid"
-)
-
-# 添加文档
-texts = [
-    "Python 是一种高级编程语言...",
-    "LangChain 是一个 LLM 应用框架...",
-]
-agent.add_texts(texts)
-
-# 查询
-answer = agent.query(
-    question="什么是 Python？",
-    top_k=3,
-    optimize_query=True
-)
-print(answer)
-
-# 流式响应
-for chunk in agent.query(question="介绍 LangChain", stream=True):
-    print(chunk, end="", flush=True)
+```text
+cdragon/
+├── src/shuyixiao_agent/
+│   ├── agents/
+│   │   └── multi_agent_collaboration.py   # 多智能体协作和法律团队
+│   ├── auth/                              # 登录、会话、密码和认证依赖
+│   ├── kb/                                # 知识库 registry 与权限
+│   ├── lpos/                              # 合同上传登记、解析、pageindex、审计
+│   ├── rag/                               # 文档加载、向量库、检索、重排、RAG Agent
+│   ├── static/index.html                  # Web 前端单文件应用
+│   ├── config.py                          # 环境变量和默认配置
+│   ├── gitee_ai_client.py                 # DashScope 兼容客户端
+│   └── web_app.py                         # FastAPI 应用入口
+├── docs/                                  # 公开使用文档和 API 文档
+├── my_docs/                               # 本地阶段文档，默认不纳入 Git
+├── tests/                                 # 自动化测试
+├── data/                                  # 本地运行数据，默认不应提交敏感内容
+├── .env.example                           # 环境变量示例
+├── run_web.py                             # 标准 Web 启动脚本
+├── run_web_auto.py                        # 自动端口 Web 启动脚本
+├── requirements.txt
+├── pyproject.toml
+└── README.md
 ```
 
-### Prompt Chaining（提示链）⭐ 新功能
+## 测试与验证
 
-```python
-from src.shuyixiao_agent.gitee_ai_client import GiteeAIClient
-from src.shuyixiao_agent.agents.prompt_chaining_agent import (
-    PromptChainingAgent,
-    DocumentGenerationChain
-)
+本项目当前推荐使用 Python 3.12 环境运行测试：
 
-# 初始化
-llm_client = GiteeAIClient()
-agent = PromptChainingAgent(llm_client, verbose=True)
-
-# 使用文档生成链（大纲→内容→示例→润色）
-agent.create_chain("doc_gen", DocumentGenerationChain.get_steps())
-result = agent.run_chain("doc_gen", "Python 异步编程入门")
-
-if result.success:
-    print(result.final_output)  # 生成的完整文档
-    print(f"总耗时: {result.execution_time:.2f}秒")
-```
-
-**5个预定义场景**：
-- 📄 文档生成 - 自动生成技术文档
-- 🔍 代码审查 - 系统化代码审查流程
-- 🔬 研究规划 - 问题→计划转化
-- 📖 故事创作 - 创意写作工作流
-- 💡 产品分析 - 需求分析和规划
-
-详见：[Prompt Chaining 快速开始](🔗 Prompt Chaining Agent - 快速开始.md) | [完整指南](docs/Prompt Chaining Agent 使用指南.md)
-
----
-
-更多示例请查看 [examples](examples/) 目录
-
-## 🛠️ 工具系统
-
-### 基础工具（13个）
-
-| 工具 | 功能 | 示例 |
-|------|------|------|
-| `get_current_time` | 获取当前时间 | "现在几点？" |
-| `calculate` | 数学计算 | "计算 (25 + 10) * 3" |
-| `search_wikipedia` | 搜索维基百科 | "搜索Python" |
-| `get_random_number` | 生成随机数 | "1到100的随机数" |
-| `convert_temperature` | 温度转换 | "25°C 是多少°F？" |
-| `string_reverse` | 反转字符串 | "反转 'hello'" |
-| `count_words` | 文本统计 | "统计字数" |
-| `get_date_info` | 日期信息 | "2025-10-10 是星期几？" |
-| `calculate_age` | 计算年龄 | "1990-01-01 出生多大了？" |
-| `generate_uuid` | 生成UUID | "生成唯一ID" |
-| `encode_base64` | Base64编码 | "编码 'hello'" |
-| `decode_base64` | Base64解码 | "解码字符串" |
-| `check_prime` | 质数检查 | "17是质数吗？" |
-
-### AI 智能工具（10个）
-
-真正需要大模型参与的高级智能工具：
-
-| 工具 | 功能 | 需要AI的能力 |
-|------|------|-------------|
-| `web_content_analyzer` | 网页内容分析 | 内容理解、信息提取 |
-| `text_quality_analyzer` | 文本质量分析 | 语言评估、问题发现 |
-| `creative_idea_generator` | 创意想法生成 | 发散思维、创新性 |
-| `code_review_assistant` | 代码审查 | 代码理解、优化建议 |
-| `decision_analyzer` | 决策分析 | 多维度分析、利弊权衡 |
-| `data_insight_generator` | 数据洞察 | 数据理解、规律发现 |
-| `content_improver` | 内容优化 | 内容理解、表达优化 |
-| `problem_solver` | 问题解决 | 问题分解、系统思考 |
-| `meeting_summarizer` | 会议总结 | 信息提取、结构化 |
-| `learning_path_designer` | 学习路径设计 | 知识体系、路径规划 |
-
-详见：[AI工具设计哲学](docs/AI工具设计哲学.md) | [工具参考文档](docs/工具参考文档.md)
-
-## 🤖 可用模型
-
-### 对话模型
-- **qwen-plus** ⭐ - 推荐，平衡质量和速度
-- **qwen-max** - 更强推理和复杂任务
-- **deepseek-v3** - 通用推理模型
-
-### 嵌入模型（RAG）
-- **text-embedding-v4** ⭐ - 推荐，DashScope 通用 embedding 模型
-
-### 重排序模型（RAG）
-- **qwen3-rerank** ⭐ - 推荐，DashScope 文本重排序模型
-
-📖 查看 [模型配置指南](docs/模型配置指南.md) 了解如何配置
-
-## 📚 文档
-
-- [快速开始](docs/快速开始.md) - 详细的安装配置指南
-- [模型配置](docs/模型配置指南.md) - 灵活配置不同模型
-- [Prompt Chaining 指南](docs/Prompt Chaining Agent 使用指南.md) ⭐ - 提示链完整教程
-- [工具参考](docs/工具参考文档.md) - 所有工具的详细文档
-- [AI工具哲学](docs/AI工具设计哲学.md) - AI工具设计理念
-- [Web 界面](docs/Web 界面使用指南.md) - Web界面使用说明
-- [RAG 指南](docs/RAG (检索增强生成) 使用指南.md) - RAG系统使用指南
-- [API 参考](docs/API 参考文档.md) - 完整的API文档
-- [LangGraph 架构](docs/LangGraph 架构详解.md) - 架构设计详解
-- [最佳实践](docs/最佳实践.md) - 开发建议
-
-## 🔧 配置选项
-
-主要配置项（`.env` 文件）：
-
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| `DASHSCOPE_API_KEY` | API 密钥 | 必填 |
-| `DASHSCOPE_MODEL` | 主对话模型 | `qwen-plus` |
-| `AGENT_MODEL` | Agent专用模型 | 空（使用主模型） |
-| `USE_CLOUD_EMBEDDING` | 使用云端嵌入 | `true` |
-| `CLOUD_EMBEDDING_MODEL` | 云端嵌入模型 | `text-embedding-v4` |
-| `USE_CLOUD_RERANKER` | 使用云端重排序 | `true` |
-| `CLOUD_RERANKER_BASE_URL` | 云端重排序 API 基础 URL | 空（复用 `DASHSCOPE_BASE_URL`） |
-| `CLOUD_RERANKER_MODEL` | 云端重排序模型 | `qwen3-rerank` |
-| `AGENT_MAX_ITERATIONS` | 最大迭代次数 | `10` |
-| `ENABLE_FAILOVER` | 故障转移 | `true` |
-| `SSL_VERIFY` | SSL验证 | `false` |
-
-## 🐛 故障排除
-
-### 端口被占用
 ```bash
-# 使用自动启动脚本
-python run_web_auto.py  # 自动查找可用端口
+python -m pytest tests
 ```
 
-### SSL 连接错误
-在 `.env` 中设置：
+如果只验证法律多智能体、LPOS、RAG 授权和前端静态主链路，可运行：
+
 ```bash
-SSL_VERIFY=false
+python -m pytest \
+  tests/test_lpos_contract_api.py \
+  tests/test_multi_agent_kb_authorization.py \
+  tests/test_multi_agent_rag_query.py \
+  tests/test_server_path_authorization.py \
+  tests/test_step20_documentation_sync.py \
+  tests/test_legal_agent_routing.py \
+  tests/test_lpos_config_and_audit.py \
+  tests/test_lpos_contract_extractor.py \
+  tests/test_lpos_contract_parser.py \
+  tests/test_lpos_frontend_static.py \
+  tests/test_lpos_pageindex.py \
+  tests/test_multi_agent_context_format.py \
+  tests/test_multi_agent_execution_policy.py \
+  tests/test_multi_agent_failure_and_synthesis.py \
+  tests/test_multi_agent_routing_api.py
 ```
 
-### 启动慢
-使用云端嵌入服务：
+提交前建议至少执行：
+
 ```bash
-USE_CLOUD_EMBEDDING=true
+git diff --check
+python -m pytest tests/test_lpos_frontend_static.py tests/test_multi_agent_routing_api.py
 ```
 
-更多问题请查看 [docs/ssl_troubleshooting.md](docs/SSL 连接错误解决方案.md)
+涉及真实 LLM 或云端 RAG 的验证需要先确认本地已配置 `DASHSCOPE_API_KEY`，并注意调用成本和数据合规。
 
-## 🤝 贡献
+## 安全与合规边界
 
-欢迎贡献！请查看 [贡献指南](docs/贡献指南.md)
+- 不要提交真实 `.env`、API Key、管理员密码、合同原文、客户资料或内部制度。
+- `AUTH_SECRET_KEY` 和 `INITIAL_ADMIN_PASSWORD` 必须在生产环境中替换为强随机值。
+- `AUTH_ENABLE_SERVER_PATH_IMPORT` 默认应保持 `false`；服务器路径导入只适合受控管理员环境。
+- 普通用户不得通过 `file_id` 解析他人上传的合同。
+- 前端和多智能体 prompt 默认只使用结构化摘要、`file_id`、文件名和安全上下文字段。
+- 审计日志只记录摘要级安全字段，不写入完整合同正文或服务端绝对路径。
+- 规则优先合同抽取对复杂表格、扫描件、OCR 质量差的文档和非标准条款格式仍有局限。
+- 法律输出必须保留人工复核语义，不能包装成正式律师意见。
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交改动 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+## 相关文档
 
-## 📄 许可证
+- [API 参考文档](docs/API%20参考文档.md)
+- [Web 界面使用指南](docs/Web%20界面使用指南.md)
+- [RAG 使用指南](docs/RAG%20%28检索增强生成%29%20使用指南.md)
+- [模型配置指南](docs/模型配置指南.md)
+- [多智能体协作说明](docs/👥%20Multi-Agent%20Collaboration%20功能完成！.md)
+- [多智能体协作超时问题解决方案](docs/多智能体协作超时问题解决方案.md)
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+部分上游通用 Agent 能力，如 Tool Agent、Prompt Chaining、Routing、Planning、Reflection 和 Memory，仍保留在代码中，主要作为框架能力或后续扩展基础。当前 README 以法律合同审查主线为准。
 
-## 🙏 致谢
+## 开源说明
 
-- [LangGraph](https://github.com/langchain-ai/langgraph) - Agent 框架
-- [LangChain](https://github.com/langchain-ai/langchain) - LLM 工具库
-- [阿里云百炼 DashScope](https://bailian.console.aliyun.com/) - 模型 API 服务
+本项目基于 `shuyixiao-agent` 的通用 Agent 框架继续开发，保留了部分原有包名、基础 Agent、工具和示例代码。后续如果继续推进开源化，建议逐步完成：
 
-## 📧 联系方式
+- 项目包名和元数据从 `shuyixiao-agent` 迁移到新的项目名
+- 通用 Agent 示例与法律主线文档分离
+- 完整测试套件中的历史文档产物和旧断言清理
+- Docker、部署示例和生产安全配置文档
+- 更完整的合同样例、脱敏演示数据和截图
 
-- 作者：舒一笑不秃头
-- 邮箱：yixiaoshu88@163.com
-- 项目地址：[GitHub](https://github.com/your-username/shuyixiao-agent)
-- 作者官网：[shuyixiao.com](https://www.shuyixiao.cn/)
+## 许可证
 
----
+本项目采用 MIT License，详见 [LICENSE](LICENSE)。
 
-## 💖 支持项目
+## 致谢
 
-如果法律多智能体助手帮助到了您，欢迎通过以下方式支持项目发展：
-
-- ⭐ **Star 项目**：在 GitHub 上给项目点个 Star
-- 🔔 **关注公众号**：「舒一笑的架构笔记」获取最新动态
-- ☕ **赞助支持**：请作者喝杯咖啡，激励持续更新
-
-<p align="center">
-  <img src="images/微信收款.jpg" width="200" alt="微信赞助">
-  <img src="images/支付宝收款.jpg" width="200" alt="支付宝赞助">
-</p>
-
-<p align="center">
-  <sub>扫码赞助，金额随心 | 您的支持是最大的动力</sub>
-</p>
-
-🚀 开始你的 AI Agent 之旅吧！
+- [LangGraph](https://github.com/langchain-ai/langgraph)
+- [LangChain](https://github.com/langchain-ai/langchain)
+- [ChromaDB](https://www.trychroma.com/)
+- [阿里云百炼 DashScope](https://bailian.console.aliyun.com/)
+- 原始开源项目 `shuyixiao-agent`

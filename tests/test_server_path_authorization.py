@@ -45,7 +45,14 @@ def _configure_server_path_test_app(tmp_path, monkeypatch):
     monkeypatch.setattr(
         web_app,
         "parse_contract_file",
-        lambda file_path: {"text": Path(file_path).read_text(encoding="utf-8"), "document_count": 1},
+        lambda file_path, **kwargs: {
+            "text": Path(file_path).read_text(encoding="utf-8"),
+            "document_count": 1,
+            "contract_structure": None,
+            "contract_structure_summary": None,
+            "parse_warnings": [],
+            "metadata": {"structure_status": "text_only", "document_count": 1},
+        },
     )
     return TestClient(web_app.app), allowed_dir
 

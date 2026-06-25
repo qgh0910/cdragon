@@ -478,6 +478,93 @@
             border: 1px solid #3b82f6;
         }
 
+        .legal-parse-summary {
+            background: #ffffff;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            color: #166534;
+            line-height: 1.5;
+            padding: 12px;
+        }
+
+        .legal-parse-summary-header {
+            align-items: flex-start;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .legal-parse-summary-title {
+            color: #14532d;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .legal-parse-summary-file {
+            color: #166534;
+            font-size: 12px;
+            margin-top: 3px;
+            word-break: break-word;
+        }
+
+        .legal-parse-summary-meta {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            margin-bottom: 10px;
+        }
+
+        .legal-parse-summary-meta-item,
+        .legal-parse-summary-section {
+            background: #f8fffb;
+            border: 1px solid #dcfce7;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .legal-parse-summary-label,
+        .legal-parse-summary-section-title {
+            color: #166534;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .legal-parse-summary-value {
+            color: #14532d;
+            font-size: 13px;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .legal-parse-summary-grid {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        }
+
+        .legal-parse-summary-list {
+            color: #14532d;
+            font-size: 12px;
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .legal-parse-summary-list li {
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .legal-parse-summary-note {
+            background: #f0fdf4;
+            border-radius: 6px;
+            color: #166534;
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 8px;
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -2041,6 +2128,26 @@
                                     <option value="approval_flow_suggestion">法务审批流建议</option>
                                 </select>
                                 <div id="legalTaskDescription" style="display: none; margin-top: 10px; color: #92400e; font-size: 13px;"></div>
+                            </div>
+
+                            <div id="legalAgentSelection" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid #fde68a;">
+                                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #92400e; font-size: 14px;">参与智能体</div>
+                                        <div id="legalAgentSelectionStatus" style="margin-top: 4px; color: #92400e; font-size: 12px;">正在加载法律智能体策略...</div>
+                                    </div>
+                                    <button
+                                        class="btn btn-sm btn-outline"
+                                        id="restoreLegalAgentDefaults"
+                                        onclick="restoreLegalAgentDefaults()"
+                                        type="button"
+                                        style="white-space: nowrap;"
+                                    >
+                                        恢复当前任务推荐
+                                    </button>
+                                </div>
+                                <div id="legalAgentOptions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px;"></div>
+                                <div id="legalAgentGapWarning" style="display: none; margin-top: 10px; padding: 10px 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; color: #92400e; font-size: 12px;"></div>
                             </div>
                         </div>
 
@@ -6265,10 +6372,14 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         let collaborationTeamsData = null;
         let collaborationModesData = null;
         let currentCollaborationResult = null;
+        let currentCollaborationSnapshot = null;
         let parsedContractText = '';
-        let uploadedLegalFilePath = '';
+        let parsedContractStructureSummary = null;
         let uploadedLegalFileId = '';
         let uploadedLegalFileName = '';
+        let legalSelectionPolicyState = 'loading';
+        let legalSelectionPolicy = null;
+        let selectedLegalAgentNames = [];
 
         const LEGAL_TASK_TEMPLATES = {
             contract_review: {
@@ -6393,6 +6504,10 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
         // 加载团队和模式信息
         async function loadCollaborationData() {
+            legalSelectionPolicyState = 'loading';
+            legalSelectionPolicy = null;
+            renderLegalAgentSelection();
+
             try {
                 const [teamsResponse, modesResponse] = await Promise.all([
                     fetch('/api/multi-agent/teams'),
@@ -6404,6 +6519,8 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
                 if (teamsData.success) {
                     collaborationTeamsData = teamsData.teams;
+                } else {
+                    legalSelectionPolicyState = 'error';
                 }
 
                 if (modesData.success) {
@@ -6413,6 +6530,9 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 updateTeamInfo();
             } catch (error) {
                 console.error('加载协作数据失败:', error);
+                legalSelectionPolicyState = 'error';
+                legalSelectionPolicy = null;
+                renderLegalAgentSelection();
             }
         }
 
@@ -6439,6 +6559,10 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             
             const team = collaborationTeamsData[teamType];
             if (!team) return;
+
+            if (teamType === 'legal_contract_review') {
+                syncLegalSelectionPolicy(team);
+            }
             
             document.getElementById('teamDescription').textContent = team.description;
             
@@ -6467,6 +6591,26 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             teamInfoCard.style.display = 'block';
         }
 
+        function syncLegalSelectionPolicy(team) {
+            if (!team.selection_policy || !team.selection_policy.task_defaults || !team.selection_policy.capability_gaps) {
+                legalSelectionPolicyState = 'error';
+                legalSelectionPolicy = null;
+                selectedLegalAgentNames = [];
+                renderLegalAgentSelection();
+                return;
+            }
+
+            legalSelectionPolicy = team.selection_policy;
+            legalSelectionPolicyState = 'ready';
+            if (!selectedLegalAgentNames.length) {
+                initializeLegalAgentSelection(document.getElementById('legalTaskType')?.value || legalSelectionPolicy.default_task_type);
+                return;
+            }
+
+            enforceRequiredLegalAgents();
+            renderLegalAgentSelection();
+        }
+
         function updateLegalTaskSection() {
             const teamType = document.getElementById('collaborationTeam').value;
             const section = document.getElementById('legalTaskSection');
@@ -6481,6 +6625,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             if (teamType === 'legal_contract_review') {
                 section.style.display = 'block';
                 fileSection.style.display = 'block';
+                renderLegalAgentSelection();
                 return;
             }
 
@@ -6490,15 +6635,17 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             description.style.display = 'none';
             description.textContent = '';
             parsedContractText = '';
-            uploadedLegalFilePath = '';
+            parsedContractStructureSummary = null;
             uploadedLegalFileId = '';
             uploadedLegalFileName = '';
+            selectedLegalAgentNames = [];
             if (filePathInput) filePathInput.value = '';
             if (fileInput) fileInput.value = '';
             if (parseStatus) {
                 parseStatus.style.display = 'none';
                 parseStatus.textContent = '';
             }
+            renderLegalAgentSelection();
         }
 
         function applyLegalTaskTemplate() {
@@ -6511,6 +6658,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                     description.style.display = 'none';
                     description.textContent = '';
                 }
+                initializeLegalAgentSelection(legalSelectionPolicy?.default_task_type || '');
                 return;
             }
 
@@ -6519,6 +6667,174 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 description.textContent = template.description;
                 description.style.display = 'block';
             }
+            initializeLegalAgentSelection(taskType);
+        }
+
+        function initializeLegalAgentSelection(taskType) {
+            if (legalSelectionPolicyState !== 'ready' || !legalSelectionPolicy) {
+                selectedLegalAgentNames = [];
+                renderLegalAgentSelection();
+                return;
+            }
+
+            const resolvedTaskType = taskType || legalSelectionPolicy.default_task_type;
+            const defaults = legalSelectionPolicy.task_defaults?.[resolvedTaskType]
+                || legalSelectionPolicy.task_defaults?.[legalSelectionPolicy.default_task_type]
+                || [];
+            const selectedNames = new Set();
+            [...defaults, ...(legalSelectionPolicy.required_agent_names || [])].forEach(name => {
+                if (typeof name === 'string' && name.trim()) {
+                    selectedNames.add(name.trim());
+                }
+            });
+            selectedLegalAgentNames = sortLegalAgentNames(Array.from(selectedNames));
+            renderLegalAgentSelection();
+        }
+
+        function enforceRequiredLegalAgents() {
+            if (!legalSelectionPolicy) return;
+
+            const selectedNames = new Set(selectedLegalAgentNames);
+            (legalSelectionPolicy.required_agent_names || []).forEach(name => {
+                if (typeof name === 'string' && name.trim()) {
+                    selectedNames.add(name.trim());
+                }
+            });
+            selectedLegalAgentNames = sortLegalAgentNames(Array.from(selectedNames));
+        }
+
+        function sortLegalAgentNames(names) {
+            const team = collaborationTeamsData?.legal_contract_review;
+            const orderedNames = new Map((team?.agents || []).map((agent, index) => [agent.name, index]));
+            return names
+                .filter(name => typeof name === 'string' && name.trim())
+                .map(name => name.trim())
+                .filter((name, index, array) => array.indexOf(name) === index)
+                .sort((left, right) => (orderedNames.get(left) ?? 999) - (orderedNames.get(right) ?? 999));
+        }
+
+        function renderLegalAgentSelection() {
+            const selection = document.getElementById('legalAgentSelection');
+            const status = document.getElementById('legalAgentSelectionStatus');
+            const options = document.getElementById('legalAgentOptions');
+            const warning = document.getElementById('legalAgentGapWarning');
+            const restoreButton = document.getElementById('restoreLegalAgentDefaults');
+            const startButton = document.getElementById('collaborationStartBtn');
+            const teamType = document.getElementById('collaborationTeam')?.value;
+
+            if (!selection || !status || !options || !warning || !restoreButton) return;
+
+            if (teamType !== 'legal_contract_review') {
+                selection.style.display = 'none';
+                if (startButton) startButton.disabled = false;
+                return;
+            }
+
+            selection.style.display = 'block';
+
+            if (legalSelectionPolicyState === 'loading') {
+                status.textContent = '正在加载法律智能体策略...';
+                options.innerHTML = '';
+                warning.style.display = 'none';
+                restoreButton.disabled = true;
+                if (startButton) startButton.disabled = true;
+                return;
+            }
+
+            if (legalSelectionPolicyState === 'error' || !legalSelectionPolicy) {
+                status.innerHTML = '法律智能体策略加载失败，无法安全发起法律协作。<button class="btn btn-sm btn-outline" onclick="loadCollaborationData()" type="button" style="margin-left: 8px;">重试</button>';
+                options.innerHTML = '';
+                warning.style.display = 'none';
+                restoreButton.disabled = true;
+                if (startButton) startButton.disabled = true;
+                return;
+            }
+
+            const team = collaborationTeamsData?.legal_contract_review;
+            const agents = team?.agents || [];
+            const taskType = document.getElementById('legalTaskType')?.value || legalSelectionPolicy.default_task_type;
+            const recommendedNames = new Set(legalSelectionPolicy.task_defaults?.[taskType] || []);
+            const requiredNames = new Set(legalSelectionPolicy.required_agent_names || []);
+            const selectedNames = new Set(selectedLegalAgentNames);
+
+            status.textContent = `已加载 ${Object.keys(legalSelectionPolicy.task_defaults || {}).length} 种法律任务策略，可按本次需求调整参与智能体。`;
+            restoreButton.disabled = false;
+            if (startButton) startButton.disabled = false;
+
+            options.innerHTML = agents.map(agent => {
+                const displayName = AGENT_DISPLAY_NAMES[agent.name] || agent.name;
+                const required = requiredNames.has(agent.name);
+                const recommended = recommendedNames.has(agent.name);
+                const checked = required || selectedNames.has(agent.name);
+                const expertise = Array.isArray(agent.expertise) ? agent.expertise.join('、') : '';
+                const badges = [
+                    required ? '<span style="background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 10px; font-size: 11px;">必选</span>' : '',
+                    recommended ? '<span style="background: #e0f2fe; color: #075985; padding: 2px 6px; border-radius: 10px; font-size: 11px;">推荐</span>' : ''
+                ].filter(Boolean).join('');
+                return `
+                    <label class="checkbox-group" style="align-items: flex-start; gap: 8px; padding: 10px; margin: 0; background: #fff; border: 1px solid #fde68a; border-radius: 6px; color: #495057;">
+                        <input type="checkbox" value="${escapeAttr(agent.name)}" ${checked ? 'checked' : ''} ${required ? 'disabled' : ''} onchange="toggleLegalAgent('${escapeAttr(agent.name)}', this.checked)">
+                        <span>
+                            <span style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 600; font-size: 13px; color: #495057;">
+                                ${escapeHtml(displayName)}
+                                ${badges}
+                            </span>
+                            <span style="display: block; margin-top: 4px; color: #6c757d; font-size: 11px;">${escapeHtml(expertise || agent.description || agent.role || '')}</span>
+                        </span>
+                    </label>
+                `;
+            }).join('');
+
+            renderLegalAgentGapWarning();
+        }
+
+        function renderLegalAgentGapWarning() {
+            const warning = document.getElementById('legalAgentGapWarning');
+            if (!warning || legalSelectionPolicyState !== 'ready' || !legalSelectionPolicy) return;
+
+            const taskType = document.getElementById('legalTaskType')?.value || legalSelectionPolicy.default_task_type;
+            const recommended = legalSelectionPolicy.task_defaults?.[taskType] || [];
+            const selectedNames = new Set(selectedLegalAgentNames);
+            const missing = recommended.filter(name => !selectedNames.has(name));
+
+            if (!missing.length) {
+                warning.style.display = 'none';
+                warning.textContent = '';
+                return;
+            }
+
+            const messages = missing.map(name => {
+                const displayName = AGENT_DISPLAY_NAMES[name] || name;
+                const gapMessage = legalSelectionPolicy.capability_gaps?.[name] || '可能缺少对应专业能力';
+                return `${displayName}：${gapMessage}`;
+            });
+            warning.textContent = `当前未选择部分推荐智能体：${messages.join('；')}。`;
+            warning.style.display = 'block';
+        }
+
+        function toggleLegalAgent(agentName, checked) {
+            if (legalSelectionPolicyState !== 'ready' || !legalSelectionPolicy) return;
+
+            const normalizedName = String(agentName || '').trim();
+            if (!normalizedName) return;
+
+            const requiredNames = new Set(legalSelectionPolicy.required_agent_names || []);
+            const selectedNames = new Set(selectedLegalAgentNames);
+            if (requiredNames.has(normalizedName)) {
+                selectedNames.add(normalizedName);
+            } else if (checked) {
+                selectedNames.add(normalizedName);
+            } else {
+                selectedNames.delete(normalizedName);
+            }
+            (legalSelectionPolicy.required_agent_names || []).forEach(name => selectedNames.add(name));
+            selectedLegalAgentNames = sortLegalAgentNames(Array.from(selectedNames));
+            renderLegalAgentSelection();
+        }
+
+        function restoreLegalAgentDefaults() {
+            const taskType = document.getElementById('legalTaskType')?.value || legalSelectionPolicy?.default_task_type || '';
+            initializeLegalAgentSelection(taskType);
         }
 
         async function parseLegalContractFile() {
@@ -6532,7 +6848,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             }
 
             parsedContractText = '';
-            uploadedLegalFilePath = '';
+            parsedContractStructureSummary = null;
             uploadedLegalFileId = '';
             uploadedLegalFileName = '';
             if (parseStatus) {
@@ -6560,7 +6876,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 fileInput.value = '';
             } catch (error) {
                 parsedContractText = '';
-                uploadedLegalFilePath = '';
+                parsedContractStructureSummary = null;
                 uploadedLegalFileId = '';
                 uploadedLegalFileName = '';
                 if (parseStatus) {
@@ -6587,7 +6903,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             }
 
             parsedContractText = '';
-            uploadedLegalFilePath = '';
+            parsedContractStructureSummary = null;
             uploadedLegalFileId = '';
             uploadedLegalFileName = '';
             if (parseStatus) {
@@ -6609,7 +6925,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 applyParsedContractResult(response, data, PathNameFromFilePath(filePath));
             } catch (error) {
                 parsedContractText = '';
-                uploadedLegalFilePath = '';
+                parsedContractStructureSummary = null;
                 uploadedLegalFileId = '';
                 uploadedLegalFileName = '';
                 if (parseStatus) {
@@ -6627,16 +6943,112 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
             const parseStatus = document.getElementById('legalFileParseStatus');
             parsedContractText = data.text || '';
-            uploadedLegalFilePath = data.stored_file_path || data.metadata?.file_path || '';
+            parsedContractStructureSummary = data.contract_structure_summary || null;
             uploadedLegalFileId = data.file_id || data.metadata?.file_id || '';
             uploadedLegalFileName = data.original_filename || data.metadata?.original_filename || fallbackName || '';
 
             if (parseStatus) {
                 const documentCount = data.metadata?.document_count || 0;
-                const fileLabel = uploadedLegalFileName ? `文件：${uploadedLegalFileName}，` : '';
                 parseStatus.style.color = '#166534';
-                parseStatus.textContent = `合同解析成功，${fileLabel}已读取 ${parsedContractText.length} 个字符，文档片段 ${documentCount} 个。`;
+                renderParsedContractStatus(parseStatus, data, documentCount);
             }
+        }
+
+        function renderParsedContractStatus(parseStatus, data, documentCount) {
+            const summary = parsedContractStructureSummary;
+            const summarySections = summary ? [
+                renderContractSummarySection('主体', summary.parties),
+                renderContractSummarySection('金额', summary.amount),
+                renderContractSummarySection('期限', summary.term),
+                renderContractSummarySection('生效日期', summary.effective_date)
+            ].filter(Boolean).join('') : '';
+            const structureSummary = formatContractStructureSummary(summary, summarySections);
+            const structureStatus = data.metadata?.structure_status || (summary ? 'success' : 'text_only');
+            const parseWarnings = normalizeContractSummaryValues(data.parse_warnings);
+            const warningHtml = parseWarnings.length ? `
+                <div class="legal-parse-summary-note">
+                    ${parseWarnings.map(warning => escapeHtml(warning)).join('<br>')}
+                </div>
+            ` : '';
+            const fileNameHtml = uploadedLegalFileName ? `
+                <div class="legal-parse-summary-file">文件：${escapeHtml(uploadedLegalFileName)}</div>
+            ` : '';
+
+            parseStatus.innerHTML = `
+                <div class="legal-parse-summary">
+                    <div class="legal-parse-summary-header">
+                        <div>
+                            <div class="legal-parse-summary-title">合同解析成功</div>
+                            ${fileNameHtml}
+                        </div>
+                        <div class="legal-parse-summary-value">${escapeHtml(structureStatus)}</div>
+                    </div>
+                    <div class="legal-parse-summary-meta">
+                        <div class="legal-parse-summary-meta-item">
+                            <div class="legal-parse-summary-label">已读取字符</div>
+                            <div class="legal-parse-summary-value">${escapeHtml(parsedContractText.length)}</div>
+                        </div>
+                        <div class="legal-parse-summary-meta-item">
+                            <div class="legal-parse-summary-label">文档片段</div>
+                            <div class="legal-parse-summary-value">${escapeHtml(documentCount)}</div>
+                        </div>
+                        <div class="legal-parse-summary-meta-item">
+                            <div class="legal-parse-summary-label">合同类型</div>
+                            <div class="legal-parse-summary-value">${escapeHtml(summary?.contract_type || '未识别')}</div>
+                        </div>
+                        <div class="legal-parse-summary-meta-item">
+                            <div class="legal-parse-summary-label">关键条款</div>
+                            <div class="legal-parse-summary-value">${escapeHtml(summary?.key_clause_summary?.length || 0)} 项</div>
+                        </div>
+                    </div>
+                    ${structureSummary || '<div class="legal-parse-summary-note">未识别结构化摘要，仍可继续发起多智能体审查并由人工复核。</div>'}
+                    ${warningHtml}
+                </div>
+            `;
+        }
+
+        function formatContractStructureSummary(summary, sectionHtml = '') {
+            if (!summary) return '';
+
+            const clauseCount = Number(summary.clause_count || 0);
+            const warningCount = Number(summary.warning_count || 0);
+            const overviewItems = [
+                `合同类型：${summary.contract_type || '未识别'}`,
+                `条款数量：${Number.isFinite(clauseCount) ? clauseCount : 0} 项`,
+                `关键条款：${summary.key_clause_summary?.length || 0} 项`
+            ];
+            if (warningCount > 0) {
+                overviewItems.push(`解析提示：${warningCount} 项`);
+            }
+
+            const overviewHtml = renderContractSummarySection('结构化摘要', overviewItems);
+            const gridHtml = sectionHtml ? `<div class="legal-parse-summary-grid">${sectionHtml}</div>` : '';
+            return `${overviewHtml}${gridHtml}`;
+        }
+
+        function renderContractSummarySection(title, values) {
+            const items = normalizeContractSummaryValues(values);
+            if (!items.length) return '';
+
+            const visibleItems = items.slice(0, 6);
+            const hiddenCount = items.length - visibleItems.length;
+            const hiddenHtml = hiddenCount > 0 ? `<li>另有 ${escapeHtml(hiddenCount)} 项，建议在审查报告中复核</li>` : '';
+            return `
+                <div class="legal-parse-summary-section">
+                    <div class="legal-parse-summary-section-title">${escapeHtml(title)}</div>
+                    <ul class="legal-parse-summary-list">
+                        ${visibleItems.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                        ${hiddenHtml}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function normalizeContractSummaryValues(value) {
+            const values = Array.isArray(value) ? value : [value];
+            return values
+                .map(item => item === null || item === undefined ? '' : String(item).trim())
+                .filter(Boolean);
         }
 
         function PathNameFromFilePath(filePath) {
@@ -6650,18 +7062,79 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             updateTeamInfo();
         }
 
+        function buildCollaborationSnapshot() {
+            const taskInput = document.getElementById('collaborationTask');
+            const teamSelect = document.getElementById('collaborationTeam');
+            const modeSelect = document.getElementById('collaborationMode');
+            const taskTypeSelect = document.getElementById('legalTaskType');
+            const knowledgeBaseSelect = document.getElementById('multiAgentKnowledgeBase');
+            const includePublicKnowledge = document.getElementById('multiAgentIncludePublicKnowledge')?.checked || false;
+            const selectedKnowledgeBaseId = knowledgeBaseSelect?.value || '';
+            const selectedAgentNames = Object.freeze([...selectedLegalAgentNames]);
+            const knowledgeBaseIds = Object.freeze(selectedKnowledgeBaseId ? [selectedKnowledgeBaseId] : []);
+
+            return Object.freeze({
+                task: taskInput?.value.trim() || '',
+                teamType: teamSelect?.value || '',
+                teamDisplayName: teamSelect?.selectedOptions?.[0]?.text || '',
+                mode: modeSelect?.value || '',
+                modeDisplayName: modeSelect?.selectedOptions?.[0]?.text || '',
+                legalTaskType: taskTypeSelect?.value || null,
+                selectedAgentNames,
+                knowledgeBase: Object.freeze({
+                    ids: knowledgeBaseIds,
+                    displayName: selectedKnowledgeBaseId ? knowledgeBaseSelect.selectedOptions?.[0]?.text || selectedKnowledgeBaseId : '未关联资料库',
+                    includePublicKnowledge
+                }),
+                file: Object.freeze({
+                    uploadedFileId: uploadedLegalFileId || '',
+                    uploadedFileName: uploadedLegalFileName || '',
+                    hasContractStructureSummary: Boolean(parsedContractStructureSummary)
+                }),
+                startedAt: new Date().toISOString()
+            });
+        }
+
+        async function readSafeStreamError(response) {
+            let message = `请求失败（HTTP ${response.status}）`;
+            try {
+                const text = await response.text();
+                if (!text) return message;
+
+                try {
+                    const data = JSON.parse(text);
+                    message = data.detail || data.message || data.error || message;
+                } catch (parseError) {
+                    message = text.length > 200 ? `${text.slice(0, 200)}...` : text;
+                }
+            } catch (error) {
+                console.warn('读取错误响应失败:', error);
+            }
+            return message;
+        }
+
+        function handleSSEEventBlock(eventBlock) {
+            const dataLines = eventBlock
+                .split('\n')
+                .filter(line => line.startsWith('data: '))
+                .map(line => line.slice(6).trim())
+                .filter(Boolean);
+
+            dataLines.forEach(payload => {
+                const data = JSON.parse(payload);
+                handleCollaborationEvent(data);
+            });
+        }
+
         // 开始协作
         async function startCollaboration() {
             const task = document.getElementById('collaborationTask').value.trim();
             const teamType = document.getElementById('collaborationTeam').value;
             const mode = document.getElementById('collaborationMode').value;
             const legalTaskType = document.getElementById('legalTaskType')?.value || null;
-            const selectedKnowledgeBaseId = document.getElementById('multiAgentKnowledgeBase')?.value || '';
-            const selectedKnowledgeBaseIds = selectedKnowledgeBaseId ? [selectedKnowledgeBaseId] : [];
-            const includePublicKnowledge = document.getElementById('multiAgentIncludePublicKnowledge')?.checked || false;
             const legalContext = parsedContractText ? {
                 contract_text: parsedContractText,
-                uploaded_file_path: uploadedLegalFilePath,
+                contract_structure_summary: parsedContractStructureSummary,
                 uploaded_file_id: uploadedLegalFileId,
                 uploaded_file_name: uploadedLegalFileName
             } : null;
@@ -6675,6 +7148,15 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 alert('请选择协作团队');
                 return;
             }
+
+            if (teamType === 'legal_contract_review' && legalSelectionPolicyState !== 'ready') {
+                renderLegalAgentSelection();
+                alert('法律智能体策略尚未加载完成，请稍后重试');
+                return;
+            }
+
+            const snapshot = buildCollaborationSnapshot();
+            currentCollaborationSnapshot = snapshot;
             
             const startBtn = document.getElementById('collaborationStartBtn');
             startBtn.disabled = true;
@@ -6697,34 +7179,45 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        input_text: task,
-                        team_type: teamType,
-                        mode: mode,
-                        legal_task_type: legalTaskType,
-                        enable_rag: selectedKnowledgeBaseIds.length > 0 || includePublicKnowledge,
-                        knowledge_base_ids: selectedKnowledgeBaseIds,
-                        include_public_knowledge: includePublicKnowledge,
-                        uploaded_file_path: uploadedLegalFilePath || null,
+                        input_text: snapshot.task,
+                        team_type: snapshot.teamType,
+                        mode: snapshot.mode,
+                        legal_task_type: snapshot.legalTaskType,
+                        selected_agent_names: snapshot.selectedAgentNames,
+                        enable_rag: snapshot.knowledgeBase.ids.length > 0 || snapshot.knowledgeBase.includePublicKnowledge,
+                        knowledge_base_ids: snapshot.knowledgeBase.ids,
+                        include_public_knowledge: snapshot.knowledgeBase.includePublicKnowledge,
                         context: legalContext
                     })
                 });
+
+                if (!response.ok) {
+                    throw new Error(await readSafeStreamError(response));
+                }
                 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let sseBuffer = '';
                 
                 while (true) {
                     const {value, done} = await reader.read();
                     if (done) break;
                     
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-                    
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = JSON.parse(line.slice(6));
-                            handleCollaborationEvent(data);
-                        }
+                    const chunk = decoder.decode(value, { stream: true });
+                    sseBuffer += chunk;
+
+                    let eventBoundary = sseBuffer.indexOf('\n\n');
+                    while (eventBoundary !== -1) {
+                        const eventBlock = sseBuffer.slice(0, eventBoundary);
+                        sseBuffer = sseBuffer.slice(eventBoundary + 2);
+                        handleSSEEventBlock(eventBlock);
+                        eventBoundary = sseBuffer.indexOf('\n\n');
                     }
+                }
+
+                sseBuffer += decoder.decode();
+                if (sseBuffer.trim()) {
+                    handleSSEEventBlock(sseBuffer);
                 }
                 
             } catch (error) {
@@ -6747,17 +7240,28 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                     break;
                     
                 case 'team_info':
+                    const agentSelection = data.metadata?.agent_selection || null;
+                    const serverAgents = data.agents || [];
+                    const selectedAgentNames = agentSelection?.selected_agent_names
+                        || serverAgents.map(agent => agent.name || agent)
+                        || [];
+                    const selectionSource = agentSelection?.selection_source || '未记录';
+                    const selectedAgentText = selectedAgentNames.length
+                        ? selectedAgentNames.map(name => AGENT_DISPLAY_NAMES[name] || name).join('、')
+                        : '服务端未返回参与名单';
                     const teamInfoHTML = `
                         <div style="font-weight: 600; margin-bottom: 8px;">法律专家团队: ${data.team_name} (${data.agent_count} 位专家)</div>
                         <div style="font-size: 13px; color: #6c757d;">处理模式: ${data.mode}</div>
+                        <div style="font-size: 13px; color: #6c757d; margin-top: 6px;">实际参与: ${escapeHtml(selectedAgentText)}</div>
+                        <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">选择来源: ${escapeHtml(selectionSource)}</div>
                     `;
                     document.getElementById('collaborationTeamInfo').innerHTML = teamInfoHTML;
                     statusDiv.textContent = '法律专家团队已组建，开始审查...';
                     break;
                     
                 case 'complete':
-                    currentCollaborationResult = data;
-                    displayCollaborationResult(data);
+                    currentCollaborationResult = {...data, requestSnapshot: currentCollaborationSnapshot};
+                    displayCollaborationResult(currentCollaborationResult);
                     statusDiv.textContent = '法律多智能体审查已完成！';
                     break;
                     
@@ -6776,15 +7280,15 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             }
 
             document.getElementById('collaborationSuccess').textContent = data.success ? '成功' : '失败';
-            document.getElementById('agentCount').textContent = Object.keys(data.agent_contributions).length;
-            document.getElementById('messageCount').textContent = data.messages.length;
+            document.getElementById('agentCount').textContent = Object.keys(data.agent_contributions || {}).length;
+            document.getElementById('messageCount').textContent = (data.messages || []).length;
             document.getElementById('collaborationTime').textContent = data.execution_time.toFixed(1) + 's';
 
             const outputDiv = document.getElementById('collaborationFinalOutput');
             outputDiv.innerHTML = DOMPurify.sanitize(marked.parse(data.final_output));
 
-            displayAgentContributions(data.agent_contributions);
-            displayCollaborationMessages(data.messages);
+            displayAgentContributions(data.agent_contributions || {});
+            displayCollaborationMessages(data.messages || []);
 
             resetCollaborationSection('agentContributionsList', 'agentContributionsToggle');
             resetCollaborationSection('messagesList', 'messagesToggle');
@@ -6834,17 +7338,23 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 };
                 
                 const roleIcon = roleIcons[contribution.role] || '🤖';
+                const status = contribution.status || 'completed';
+                const statusLabel = status === 'failed' ? '失败' : '完成';
+                const statusColor = status === 'failed' ? '#b91c1c' : '#166534';
+                const responseText = status === 'failed'
+                    ? '该智能体执行失败，内部异常已隐藏。请结合其他专家结果并进行人工复核。'
+                    : (contribution.response || '');
                 
                 contributionDiv.innerHTML = `
                     <div style="display: flex; align-items: center; margin-bottom: 12px;">
                         <span style="font-size: 24px; margin-right: 12px;">${roleIcon}</span>
                         <div>
                             <h5 style="margin: 0; color: #495057;">${agentName}</h5>
-                            <div style="font-size: 12px; color: #6c757d;">${contribution.role}</div>
+                            <div style="font-size: 12px; color: #6c757d;">${contribution.role} · <span style="color: ${statusColor};">${statusLabel}</span></div>
                         </div>
                     </div>
                     <div class="markdown-content" style="font-size: 14px;">
-                        ${DOMPurify.sanitize(marked.parse(contribution.response))}
+                        ${DOMPurify.sanitize(marked.parse(responseText))}
                     </div>
                 `;
                 
@@ -6900,6 +7410,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             resetCollaborationSection('agentContributionsList', 'agentContributionsToggle');
             resetCollaborationSection('messagesList', 'messagesToggle');
             currentCollaborationResult = null;
+            currentCollaborationSnapshot = null;
         }
 
         // 复制协作结果
@@ -6918,32 +7429,60 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         function downloadCollaborationResult() {
             if (!currentCollaborationResult) return;
 
-            const task = document.getElementById('collaborationTask').value.trim();
-            const knowledgeBaseSelect = document.getElementById('multiAgentKnowledgeBase');
-            const selectedKnowledgeBase = knowledgeBaseSelect?.value ? knowledgeBaseSelect.selectedOptions[0].text : '未关联资料库';
-            const legalFilePath = uploadedLegalFileName || uploadedLegalFilePath || document.getElementById('legalFilePath')?.value.trim() || '未上传或未解析文件';
+            const requestSnapshot = currentCollaborationResult.requestSnapshot || {};
+            const agentSelection = currentCollaborationResult.metadata?.agent_selection || {};
+            const knowledgeBaseSnapshot = requestSnapshot.knowledgeBase || {};
+            const fileSnapshot = requestSnapshot.file || {};
+            const selectedAgentNames = agentSelection.selected_agent_names || requestSnapshot.selectedAgentNames || [];
+            const capabilityGaps = agentSelection.capability_gaps || [];
+            const contributions = currentCollaborationResult.agent_contributions || {};
+            const legalFilePath = fileSnapshot.uploadedFileName || '未上传或未解析文件';
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `legal_review_report_${timestamp}.md`;
+            const selectedAgentText = selectedAgentNames.length
+                ? selectedAgentNames.map(name => AGENT_DISPLAY_NAMES[name] || name).join('、')
+                : '未记录';
+            const gapText = capabilityGaps.length
+                ? capabilityGaps.map(gap => {
+                    if (typeof gap === 'string') return gap;
+                    const agentName = gap.agent_name || gap.agentName || '未知智能体';
+                    return `${AGENT_DISPLAY_NAMES[agentName] || agentName}：${gap.message || '可能缺少对应专业能力'}`;
+                }).join('；')
+                : '无';
 
             let content = `# 法律多智能体审查报告\n\n`;
-            content += `**审查任务**: ${task}\n\n`;
-            content += `**法律服务团队**: ${document.getElementById('collaborationTeam').selectedOptions[0].text}\n`;
-            content += `**处理模式**: ${document.getElementById('collaborationMode').selectedOptions[0].text}\n`;
-            content += `**关联资料库**: ${selectedKnowledgeBase}\n`;
+            content += `**审查任务**: ${requestSnapshot.task || '未记录'}\n\n`;
+            content += `**法律服务团队**: ${requestSnapshot.teamDisplayName || requestSnapshot.teamType || '未记录'}\n`;
+            content += `**处理模式**: ${requestSnapshot.modeDisplayName || requestSnapshot.mode || '未记录'}\n`;
+            content += `**法律任务类型**: ${agentSelection.legal_task_type || requestSnapshot.legalTaskType || '未记录'}\n`;
+            content += `**选择来源**: ${agentSelection.selection_source || '未记录'}\n`;
+            content += `**实际参与智能体**: ${selectedAgentText}\n`;
+            content += `**能力缺口提示**: ${gapText}\n`;
+            content += `**关联资料库**: ${knowledgeBaseSnapshot.displayName || '未关联资料库'}\n`;
+            content += `**包含公共知识库**: ${knowledgeBaseSnapshot.includePublicKnowledge ? '是' : '否'}\n`;
             content += `**合同或材料文件**: ${legalFilePath}\n`;
-            if (uploadedLegalFileId) {
-                content += `**上传文件ID**: ${uploadedLegalFileId}\n`;
+            if (fileSnapshot.uploadedFileId) {
+                content += `**上传文件ID**: ${fileSnapshot.uploadedFileId}\n`;
             }
-            content += `**参与专家数**: ${Object.keys(currentCollaborationResult.agent_contributions).length}\n`;
-            content += `**审查耗时**: ${currentCollaborationResult.execution_time.toFixed(1)}s\n\n`;
+            content += `**是否包含结构化摘要**: ${fileSnapshot.hasContractStructureSummary ? '是' : '否'}\n`;
+            content += `**发起时间**: ${requestSnapshot.startedAt || '未记录'}\n`;
+            content += `**参与专家数**: ${Object.keys(contributions).length}\n`;
+            content += `**审查耗时**: ${Number(currentCollaborationResult.execution_time || 0).toFixed(1)}s\n\n`;
+            content += `> 本报告由法律多智能体系统辅助生成，不构成正式律师意见；请由具备资质的专业人员结合事实、证据和适用法律进行人工复核。\n\n`;
             content += `---\n\n`;
             content += `## 最终审查结论\n\n${currentCollaborationResult.final_output}\n\n`;
             content += `---\n\n`;
             content += `## 各法律专家分析\n\n`;
             
-            for (const [agentName, contribution] of Object.entries(currentCollaborationResult.agent_contributions)) {
-                content += `### ${agentName} (${contribution.role})\n\n`;
-                content += `${contribution.response}\n\n`;
+            for (const [agentName, contribution] of Object.entries(contributions)) {
+                const status = contribution.status || 'completed';
+                const statusLabel = status === 'failed' ? '失败' : '完成';
+                content += `### ${AGENT_DISPLAY_NAMES[agentName] || agentName} (${contribution.role || 'unknown'} · ${statusLabel})\n\n`;
+                if (status === 'failed') {
+                    content += `该智能体执行失败，内部异常已隐藏。请结合其他专家结果并进行人工复核。\n\n`;
+                    continue;
+                }
+                content += `${contribution.response || ''}\n\n`;
             }
             
             const blob = new Blob([content], { type: 'text/markdown' });

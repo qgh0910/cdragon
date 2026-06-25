@@ -5,6 +5,7 @@
 ## 目录
 
 - [Web/API 登录与知识库权限接口](#webapi-登录与知识库权限接口)
+- [LPOS 合同上传与结构化解析接口](#lpos-合同上传与结构化解析接口)
 - [GiteeAIClient](#giteeaiclient)
 - [SimpleAgent](#simpleagent)
 - [ToolAgent](#toolagent)
@@ -96,9 +97,21 @@ POST /api/rag/query/stream
 ### 多智能体协作接口
 
 ```text
+GET /api/multi-agent/teams
 POST /api/multi-agent/collaborate
 POST /api/multi-agent/collaborate/stream
 ```
+
+`GET /api/multi-agent/teams` 返回可用团队。法律团队 `legal_contract_review` 会额外返回 `selection_policy`，其中包含 `default_task_type`、`required_agent_names`、9 种 `task_defaults` 和 `capability_gaps`。默认任务 `contract_review` 使用默认四人：`contract_reviewer`、`clause_risk_analyzer`、`legal_researcher`、`compliance_checker`；`risk_identification` 默认使用 `contract_reviewer` 和 `clause_risk_analyzer`。
+
+法律团队协作请求支持两个专用字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `legal_task_type` | string | 法律任务类型；缺省为 `contract_review`。 |
+| `selected_agent_names` | string[] | 本次实际参与的法律 Agent 名称；服务端会补全必选 `contract_reviewer`、去重并按团队顺序排序。 |
+
+当 `selected_agent_names` 缺省或显式等于该任务推荐组合时，`metadata.agent_selection.selection_source` 为 `template_default`；当用户移除或增加可选 Agent 时为 `user_override`，并在 `missing_recommended_agent_names` 和 `capability_gaps` 中返回能力缺口提示。非法律团队会忽略 `legal_task_type` 和 `selected_agent_names`，保持既有行为。
 
 启用 RAG 时使用 `knowledge_base_ids` 和 `include_public_knowledge`：
 
@@ -107,6 +120,8 @@ POST /api/multi-agent/collaborate/stream
   "input_text": "请审查这份合同的违约责任条款",
   "team_type": "legal_contract_review",
   "mode": "hierarchical",
+  "legal_task_type": "risk_identification",
+  "selected_agent_names": ["contract_reviewer", "clause_risk_analyzer"],
   "enable_rag": true,
   "knowledge_base_ids": ["kb_user_contract"],
   "include_public_knowledge": true,
@@ -115,6 +130,83 @@ POST /api/multi-agent/collaborate/stream
 ```
 
 后端会先校验所有知识库权限；任一无权限 `kb_id` 会返回 403/404 且不启动 LLM。响应 metadata 会展示知识库来源，包括 `kb_id`、`scope`、`display_name`、`collection_name` 和 `source`。
+
+法律协作响应会在 `metadata.agent_selection` 中返回服务端权威选择信息：
+
+```json
+{
+  "agent_selection": {
+    "team_type": "legal_contract_review",
+    "legal_task_type": "risk_identification",
+    "selection_source": "template_default",
+    "selected_agent_names": ["contract_reviewer", "clause_risk_analyzer"],
+    "missing_recommended_agent_names": [],
+    "capability_gaps": []
+  }
+}
+```
+
+普通接口和 SSE `team_info`、`complete` 事件使用同一份 `agent_selection`。SSE 运行期错误仅返回脱敏安全文案；法律请求的可预检查错误包括未知任务或 Agent 的 400、超大法律 context 的 413、字段形状或类型错误的 422。多智能体输出和导出报告仅供辅助审查，不构成正式律师意见，仍需人工复核。
+
+### LPOS 合同上传与结构化解析接口
+
+```text
+POST /api/lpos/contracts/upload
+POST /api/lpos/contracts/parse
+```
+
+两个接口均要求登录。上传接口使用 `multipart/form-data`：
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `file` | file | 必填 | 合同或法律材料文件 |
+| `parse_after_upload` | bool | `true` | 上传后立即解析 |
+| `parse_structure` | bool | `true` | 是否抽取合同结构 |
+| `include_clause_content` | bool | `false` | 是否返回完整条款正文 |
+| `include_page_index` | bool | `false` | 是否返回完整 pageindex 调试数据 |
+| `tenant_id` | string | `default` | 当前租户标识 |
+
+解析接口使用 JSON 请求体。普通用户应使用本人上传并登记的 `file_id`：
+
+```json
+{
+  "file_id": "20260616_120000_abcdef123456",
+  "tenant_id": "default",
+  "parse_structure": true,
+  "include_clause_content": false,
+  "include_page_index": false
+}
+```
+
+`file_path` 仅允许管理员在 `AUTH_ENABLE_SERVER_PATH_IMPORT=true` 且真实路径位于允许的 upload root 内时使用。普通用户不能解析其他用户登记的 `file_id`；管理员跨用户解析会写入审计日志。
+
+成功响应的核心字段：
+
+```json
+{
+  "success": true,
+  "text": "合同文本",
+  "contract_structure": {},
+  "contract_structure_summary": {
+    "contract_type": "采购合同",
+    "parties": ["甲方：A公司", "乙方：B公司"],
+    "amount": [],
+    "term": [],
+    "clause_count": 12,
+    "key_clause_summary": []
+  },
+  "parse_warnings": [],
+  "metadata": {
+    "structure_status": "success",
+    "document_count": 1,
+    "text_char_count": 12000
+  }
+}
+```
+
+默认不返回完整条款 `content` 和完整 `page_index`。结构化失败但文本抽取成功时仍返回 200，并设置 `metadata.structure_status="text_only"`；文本抽取失败返回 422。常见错误码还包括：未登录 401、参数或路径非法 400、越权访问 403、登记或物理文件不存在 404，以及未预期服务错误 500。
+
+前端和多智能体默认只使用 `contract_structure_summary`、`file_id` 和原始文件名，不展示或注入服务端绝对路径；结构化结果仅供辅助审查，不能替代律师人工复核。
 
 ### legacy 兼容接口
 

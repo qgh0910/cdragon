@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 
 ENV_EXAMPLE = Path(".env.example")
 RAG_DOC = Path("docs/RAG (检索增强生成) 使用指南.md")
@@ -9,9 +11,15 @@ API_DOC = Path("docs/API 参考文档.md")
 LEGAL_DOC = Path("my_docs/法律多智能体项目文档.md")
 
 
+def _read_required_doc(path: Path) -> str:
+    """读取必须存在的项目文档，缺失时给出清晰契约失败信息。"""
+    assert path.exists(), f"文档缺失: {path}"
+    return path.read_text(encoding="utf-8")
+
+
 def test_env_example_documents_auth_and_startup_settings():
     """环境变量示例应覆盖登录、Session、CORS 和服务器路径开关。"""
-    content = ENV_EXAMPLE.read_text(encoding="utf-8")
+    content = _read_required_doc(ENV_EXAMPLE)
 
     required_items = [
         "AUTH_SECRET_KEY",
@@ -32,7 +40,7 @@ def test_env_example_documents_auth_and_startup_settings():
 
 def test_rag_guide_documents_kb_id_permissions_and_legacy_migration():
     """RAG 指南应说明 kb_id 驱动接口、权限矩阵和 legacy 迁移报告。"""
-    content = RAG_DOC.read_text(encoding="utf-8")
+    content = _read_required_doc(RAG_DOC)
 
     required_items = [
         "登录与知识库权限",
@@ -54,7 +62,7 @@ def test_rag_guide_documents_kb_id_permissions_and_legacy_migration():
 
 def test_api_reference_documents_auth_kb_and_multi_agent_contracts():
     """API 参考应包含认证、知识库、RAG 查询和多智能体新请求契约。"""
-    content = API_DOC.read_text(encoding="utf-8")
+    content = _read_required_doc(API_DOC)
 
     required_items = [
         "Web/API 登录与知识库权限接口",
@@ -79,7 +87,7 @@ def test_api_reference_documents_auth_kb_and_multi_agent_contracts():
 
 def test_legal_project_doc_documents_login_kb_scope_and_verification():
     """法律项目文档应同步登录态、知识库作用域、多智能体来源和验收命令。"""
-    content = LEGAL_DOC.read_text(encoding="utf-8")
+    content = _read_required_doc(LEGAL_DOC)
 
     required_items = [
         "用户登录与知识库权限",
@@ -97,3 +105,26 @@ def test_legal_project_doc_documents_login_kb_scope_and_verification():
     ]
     for item in required_items:
         assert item in content
+
+
+@pytest.mark.parametrize("path", [API_DOC, LEGAL_DOC])
+def test_multi_agent_dynamic_routing_docs_are_synchronized(path):
+    """API 参考和法律项目文档应同步动态路由、选择策略和法律边界。"""
+    required_items = [
+        "GET /api/multi-agent/teams",
+        "selected_agent_names",
+        "legal_task_type",
+        "selection_policy",
+        "risk_identification",
+        "template_default",
+        "user_override",
+        "missing_recommended_agent_names",
+        "413",
+        "422",
+        "默认四人",
+        "不构成正式律师意见",
+    ]
+    content = _read_required_doc(path)
+
+    missing_items = [item for item in required_items if item not in content]
+    assert not missing_items, f"{path} 缺少动态路由文档项: {missing_items}"

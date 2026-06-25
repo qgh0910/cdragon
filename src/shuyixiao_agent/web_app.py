@@ -8,17 +8,25 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Response, Re
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any, TYPE_CHECKING
+from pydantic import BaseModel, Field, StrictStr, StringConstraints
+from starlette.concurrency import run_in_threadpool
+from typing import Annotated, List, Optional, Dict, Any, TYPE_CHECKING
 import os
 import json
+import logging
 import re
 import hashlib
 import uuid
 import sqlite3
+import time
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from langchain_core.messages import HumanMessage
+
+
+logger = logging.getLogger(__name__)
+LEGAL_COLLABORATION_RUNTIME_ERROR_MESSAGE = "法律多智能体协作执行失败，请稍后重试或联系管理员。"
 
 from .agents.simple_agent import SimpleAgent
 from .agents.tool_agent import ToolAgent
@@ -81,6 +89,8 @@ from .agents.multi_agent_collaboration import (
     ResearchTeam,
     ContentCreationTeam,
     BusinessConsultingTeam,
+    LegalAgentSelectionError,
+    LegalCollaborationExecutionPolicy,
     LegalContractReviewTeam
 )
 from .agents.memory_agent import (
@@ -113,7 +123,8 @@ from .auth.sessions import (
 )
 from .kb import registry as kb_registry
 from .kb.permissions import resolve_knowledge_base
-from .lpos import upload_registry
+from .lpos import audit as contract_audit
+from .lpos import contract_parser, upload_registry
 
 # RAG Agent 延迟导入，避免阻塞启动
 # 使用 TYPE_CHECKING 来支持类型注解而不影响运行时
@@ -501,18 +512,58 @@ def resolve_uploaded_file(file_id: str, *category_parts: str) -> Path:
     return resolved_path
 
 
-def parse_contract_file(file_path: str) -> Dict[str, Any]:
-    """复用 DocumentLoader 解析合同文件文本"""
-    from .rag.document_loader import DocumentLoader
+def parse_contract_file(
+    file_path: str,
+    file_id: Optional[str] = None,
+    original_filename: Optional[str] = None,
+    parse_structure: bool = True,
+    include_clause_content: bool = False,
+    include_page_index: bool = False,
+) -> Dict[str, Any]:
+    """兼容旧调用的合同解析薄包装。"""
+    from .lpos import contract_parser
 
-    loader = DocumentLoader()
-    documents = loader.load_file(file_path)
-    text = "\n\n".join(doc.page_content for doc in documents)
+    return contract_parser.parse_contract_file(
+        file_path,
+        file_id=file_id,
+        original_filename=original_filename,
+        parse_structure=parse_structure,
+        include_clause_content=include_clause_content,
+        include_page_index=include_page_index,
+    )
 
-    return {
-        "text": text,
-        "document_count": len(documents),
-    }
+
+def _contract_parse_audit_event(structure_status: str) -> str:
+    """将结构化状态映射为合同解析审计事件。"""
+    if structure_status == "partial":
+        return "contract_parse_partial"
+    if structure_status == "text_only":
+        return "contract_parse_text_only"
+    return "contract_parse_success"
+
+
+def _contract_clause_count(parsed: Dict[str, Any]) -> int:
+    """从解析结果提取摘要级条款数量。"""
+    structure = parsed.get("contract_structure") or {}
+    clauses = structure.get("clauses") or []
+    return len(clauses)
+
+
+def _contract_cross_user_audit_detail(
+    current_user: Dict[str, Any],
+    target_owner_user_id: Optional[str],
+) -> Dict[str, Any]:
+    """管理员跨用户解析时记录双方用户 ID。"""
+    if (
+        current_user.get("role") == "admin"
+        and target_owner_user_id
+        and target_owner_user_id != current_user.get("id")
+    ):
+        return {
+            "admin_user_id": current_user["id"],
+            "target_owner_user_id": target_owner_user_id,
+        }
+    return {}
 
 
 def build_normalized_collection_name(name: str) -> str:
@@ -639,6 +690,9 @@ class ContractParseRequest(BaseModel):
     file_path: Optional[str] = None
     file_id: Optional[str] = None
     tenant_id: Optional[str] = "default"
+    parse_structure: bool = True
+    include_clause_content: bool = False
+    include_page_index: bool = False
 
 
 class KnowledgeBaseCreateRequest(BaseModel):
@@ -3925,11 +3979,16 @@ async def get_planning_scenarios():
 async def upload_contract(
     file: UploadFile = File(...),
     parse_after_upload: bool = Form(True),
+    parse_structure: bool = Form(True),
+    include_clause_content: bool = Form(False),
+    include_page_index: bool = Form(False),
     tenant_id: str = Form("default"),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """上传合同或法律材料文件，并可立即解析文本"""
     saved_file: Optional[Dict[str, Any]] = None
+    upload_registered = False
+    parse_started_at: Optional[float] = None
     normalized_tenant_id = normalize_tenant_id(tenant_id)
     try:
         target_dir = ensure_upload_dir("users", current_user["id"], "lpos", "contracts")
@@ -3943,6 +4002,19 @@ async def upload_contract(
             file_size=saved_file["file_size"],
             content_type=saved_file["content_type"],
         )
+        upload_registered = True
+        contract_audit.record_contract_event(
+            event="contract_upload",
+            user_id=current_user["id"],
+            tenant_id=normalized_tenant_id,
+            file_id=saved_file["file_id"],
+            original_filename=saved_file["original_filename"],
+            detail={
+                "file_size": saved_file["file_size"],
+                "content_type": saved_file["content_type"],
+                "parse_after_upload": parse_after_upload,
+            },
+        )
 
         metadata = {
             "file_id": saved_file["file_id"],
@@ -3952,54 +4024,114 @@ async def upload_contract(
             "file_size": saved_file["file_size"],
             "content_type": saved_file["content_type"],
             "document_count": 0,
+            "structure_status": "text_only",
+            "text_char_count": 0,
         }
         text = ""
+        parsed_result: Dict[str, Any] = {
+            "contract_structure": None,
+            "contract_structure_summary": None,
+            "parse_warnings": [],
+        }
 
         if parse_after_upload:
-            parsed = parse_contract_file(saved_file["stored_file_path"])
-            text = parsed["text"]
-            metadata["document_count"] = parsed["document_count"]
+            parse_started_at = time.perf_counter()
+            contract_audit.record_contract_event(
+                event="contract_parse_start",
+                user_id=current_user["id"],
+                tenant_id=normalized_tenant_id,
+                file_id=saved_file["file_id"],
+                original_filename=saved_file["original_filename"],
+            )
+            parsed_result = await run_in_threadpool(
+                parse_contract_file,
+                saved_file["stored_file_path"],
+                file_id=saved_file["file_id"],
+                original_filename=saved_file["original_filename"],
+                parse_structure=parse_structure,
+                include_clause_content=include_clause_content,
+                include_page_index=include_page_index,
+            )
+            text = parsed_result["text"]
+            metadata.update(parsed_result["metadata"])
+            contract_audit.record_contract_event(
+                event=_contract_parse_audit_event(metadata["structure_status"]),
+                user_id=current_user["id"],
+                tenant_id=normalized_tenant_id,
+                file_id=saved_file["file_id"],
+                original_filename=saved_file["original_filename"],
+                structure_status=metadata["structure_status"],
+                text_char_count=metadata["text_char_count"],
+                clause_count=_contract_clause_count(parsed_result),
+                duration_ms=int((time.perf_counter() - parse_started_at) * 1000),
+                detail={"document_count": metadata["document_count"]},
+            )
 
-        append_upload_audit_record({
-            "tenant_id": normalized_tenant_id,
-            "usage_type": "lpos_contract",
-            "status": "success",
-            "file_id": saved_file["file_id"],
-            "original_filename": saved_file["original_filename"],
-            "stored_file_path": saved_file["stored_file_path"],
-            "file_size": saved_file["file_size"],
-            "content_type": saved_file["content_type"],
-            "parse_after_upload": parse_after_upload,
-            "document_count": metadata["document_count"],
-            "text_length": len(text),
-        })
-
-        return {
+        response = {
             "success": True,
             "file_id": saved_file["file_id"],
             "tenant_id": normalized_tenant_id,
             "original_filename": saved_file["original_filename"],
             "stored_file_path": saved_file["stored_file_path"],
             "file_size": saved_file["file_size"],
+            "parsed": parse_after_upload,
             "text": text,
-            "metadata": metadata
+            "contract_structure": parsed_result["contract_structure"],
+            "contract_structure_summary": parsed_result["contract_structure_summary"],
+            "parse_warnings": parsed_result["parse_warnings"],
+            "metadata": metadata,
         }
-    except HTTPException:
+        if "page_index" in parsed_result:
+            response["page_index"] = parsed_result["page_index"]
+        return response
+    except HTTPException as e:
+        if not upload_registered:
+            contract_audit.record_contract_event(
+                event="contract_upload",
+                user_id=current_user["id"],
+                tenant_id=normalized_tenant_id,
+                file_id=saved_file["file_id"] if saved_file else None,
+                original_filename=saved_file["original_filename"] if saved_file else None,
+                error_code=f"http_{e.status_code}",
+                error_message_brief=str(e.detail),
+                detail={"parse_after_upload": parse_after_upload},
+                status="failed",
+            )
         raise
+    except contract_parser.ContractTextExtractionError as e:
+        contract_audit.record_contract_event(
+            event="contract_parse_failed",
+            user_id=current_user["id"],
+            tenant_id=normalized_tenant_id,
+            file_id=saved_file["file_id"] if saved_file else None,
+            original_filename=saved_file["original_filename"] if saved_file else None,
+            duration_ms=(
+                int((time.perf_counter() - parse_started_at) * 1000)
+                if parse_started_at is not None
+                else None
+            ),
+            error_code="text_extraction_failed",
+            error_message_brief=str(e),
+            status="failed",
+        )
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        if saved_file:
-            append_upload_audit_record({
-                "tenant_id": normalized_tenant_id,
-                "usage_type": "lpos_contract",
-                "status": "failed",
-                "file_id": saved_file["file_id"],
-                "original_filename": saved_file["original_filename"],
-                "stored_file_path": saved_file["stored_file_path"],
-                "file_size": saved_file["file_size"],
-                "content_type": saved_file["content_type"],
-                "parse_after_upload": parse_after_upload,
-                "error_message": str(e),
-            })
+        contract_audit.record_contract_event(
+            event="contract_parse_failed" if parse_started_at is not None else "contract_upload",
+            user_id=current_user["id"],
+            tenant_id=normalized_tenant_id,
+            file_id=saved_file["file_id"] if saved_file else None,
+            original_filename=saved_file["original_filename"] if saved_file else None,
+            duration_ms=(
+                int((time.perf_counter() - parse_started_at) * 1000)
+                if parse_started_at is not None
+                else None
+            ),
+            error_code="unexpected_error",
+            error_message_brief=str(e),
+            detail={"parse_after_upload": parse_after_upload},
+            status="failed",
+        )
         raise HTTPException(status_code=500, detail=f"合同上传失败: {str(e)}")
 
 
@@ -4009,14 +4141,19 @@ async def parse_contract(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """解析合同文件文本"""
+    tenant_id = normalize_tenant_id(request.tenant_id)
+    parse_started_at: Optional[float] = None
+    target_owner_user_id: Optional[str] = None
+    original_filename: Optional[str] = None
     try:
-        tenant_id = normalize_tenant_id(request.tenant_id)
         if request.file_id:
             record = upload_registry.resolve_uploaded_file_for_user(
                 request.file_id,
                 current_user=current_user,
                 tenant_id=tenant_id,
             )
+            original_filename = record["original_filename"]
+            target_owner_user_id = record["owner_user_id"]
             upload_root = Path(settings.upload_root_path).expanduser().resolve()
             stored_path = Path(record["stored_file_path"]).expanduser().resolve()
             if upload_root != stored_path and upload_root not in stored_path.parents:
@@ -4026,28 +4163,171 @@ async def parse_contract(
             file_path = str(stored_path)
         elif request.file_path:
             file_path = authorize_server_path_access(request.file_path, current_user)
+            original_filename = Path(file_path).name
         else:
             raise HTTPException(status_code=400, detail="请提供 file_path 或 file_id")
 
-        parsed = parse_contract_file(file_path)
+        parse_started_at = time.perf_counter()
+        contract_audit.record_contract_event(
+            event="contract_parse_start",
+            user_id=current_user["id"],
+            tenant_id=tenant_id,
+            file_id=request.file_id,
+            original_filename=original_filename,
+            detail=_contract_cross_user_audit_detail(current_user, target_owner_user_id),
+        )
+        parsed = await run_in_threadpool(
+            parse_contract_file,
+            file_path,
+            file_id=request.file_id,
+            original_filename=original_filename,
+            parse_structure=request.parse_structure,
+            include_clause_content=request.include_clause_content,
+            include_page_index=request.include_page_index,
+        )
+        structure_status = parsed["metadata"]["structure_status"]
+        contract_audit.record_contract_event(
+            event=_contract_parse_audit_event(structure_status),
+            user_id=current_user["id"],
+            tenant_id=tenant_id,
+            file_id=request.file_id,
+            original_filename=original_filename,
+            structure_status=structure_status,
+            text_char_count=parsed["metadata"].get("text_char_count", len(parsed["text"])),
+            clause_count=_contract_clause_count(parsed),
+            duration_ms=int((time.perf_counter() - parse_started_at) * 1000),
+            detail={
+                "document_count": parsed["metadata"].get("document_count"),
+                **_contract_cross_user_audit_detail(current_user, target_owner_user_id),
+            },
+        )
 
-        return {
+        response = {
             "success": True,
             "text": parsed["text"],
+            "contract_structure": parsed["contract_structure"],
+            "contract_structure_summary": parsed["contract_structure_summary"],
+            "parse_warnings": parsed["parse_warnings"],
             "metadata": {
                 "file_path": file_path,
                 "file_id": request.file_id,
                 "tenant_id": tenant_id,
-                "document_count": parsed["document_count"]
-            }
+                **parsed["metadata"],
+            },
         }
-    except HTTPException:
+        if "page_index" in parsed:
+            response["page_index"] = parsed["page_index"]
+        return response
+    except HTTPException as e:
+        if e.status_code == 403:
+            if request.file_id and target_owner_user_id is None:
+                target_record = upload_registry.get_uploaded_file(request.file_id)
+                target_owner_user_id = (
+                    target_record.get("owner_user_id") if target_record else None
+                )
+            contract_audit.record_contract_event(
+                event="contract_parse_forbidden",
+                user_id=current_user["id"],
+                tenant_id=tenant_id,
+                file_id=request.file_id,
+                original_filename=original_filename,
+                error_code="forbidden",
+                error_message_brief=str(e.detail),
+                detail={"target_owner_user_id": target_owner_user_id},
+                status="failed",
+            )
+        else:
+            contract_audit.record_contract_event(
+                event="contract_parse_failed",
+                user_id=current_user["id"],
+                tenant_id=tenant_id,
+                file_id=request.file_id,
+                original_filename=original_filename,
+                error_code=f"http_{e.status_code}",
+                error_message_brief=str(e.detail),
+                detail=_contract_cross_user_audit_detail(
+                    current_user,
+                    target_owner_user_id,
+                ),
+                status="failed",
+            )
         raise
+    except contract_parser.ContractTextExtractionError as e:
+        contract_audit.record_contract_event(
+            event="contract_parse_failed",
+            user_id=current_user["id"],
+            tenant_id=tenant_id,
+            file_id=request.file_id,
+            original_filename=original_filename,
+            duration_ms=(
+                int((time.perf_counter() - parse_started_at) * 1000)
+                if parse_started_at is not None
+                else None
+            ),
+            error_code="text_extraction_failed",
+            error_message_brief=str(e),
+            detail=_contract_cross_user_audit_detail(current_user, target_owner_user_id),
+            status="failed",
+        )
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
+        contract_audit.record_contract_event(
+            event="contract_parse_failed",
+            user_id=current_user["id"],
+            tenant_id=tenant_id,
+            file_id=request.file_id,
+            original_filename=original_filename,
+            duration_ms=(
+                int((time.perf_counter() - parse_started_at) * 1000)
+                if parse_started_at is not None
+                else None
+            ),
+            error_code="unexpected_error",
+            error_message_brief=str(e),
+            detail=_contract_cross_user_audit_detail(current_user, target_owner_user_id),
+            status="failed",
+        )
         raise HTTPException(status_code=500, detail=f"合同解析失败: {str(e)}")
 
 
 # ==================== Multi-Agent Collaboration APIs ====================
+
+LegalAgentName = Annotated[StrictStr, StringConstraints(max_length=64)]
+SelectedLegalAgentNames = Annotated[List[LegalAgentName], Field(max_length=20)]
+
+LEGAL_CONTEXT_MAX_BYTES = 1024 * 1024
+LEGAL_TEXT_TRUNCATION_SUFFIX = "…[内容已截断]"
+LEGAL_CONTRACT_TEXT_MAX_CHARS = 1200
+LEGAL_STRUCTURE_SUMMARY_MAX_CHARS = 6000
+LEGAL_FILENAME_MAX_CHARS = 255
+LEGAL_UPLOADED_FILE_ID_MAX_CHARS = 128
+LEGAL_REVIEW_FOCUS_MAX_CHARS = 1000
+LEGAL_SHORT_FIELD_MAX_CHARS = 200
+LEGAL_CLAUSE_REFS_MAX_ITEMS = 20
+LEGAL_CLAUSE_REF_MAX_CHARS = 500
+LEGAL_STRUCTURE_LIST_MAX_ITEMS = 10
+LEGAL_KEY_CLAUSE_MAX_ITEMS = 20
+LEGAL_SOURCE_REFS_MAX_ITEMS = 3
+LEGAL_WARNING_MAX_ITEMS = 20
+
+LEGAL_SHORT_CONTEXT_FIELDS = (
+    "contract_type",
+    "task_type",
+    "industry",
+    "jurisdiction",
+    "risk_level",
+    "contract_name",
+    "party_a",
+    "party_b",
+)
+LEGAL_SOURCE_REF_FIELDS = (
+    "file_id",
+    "source_name",
+    "document_type",
+    "page_number",
+    "paragraph_index",
+)
+
 
 class MultiAgentCollaborationRequest(BaseModel):
     """多智能体协作请求"""
@@ -4055,6 +4335,7 @@ class MultiAgentCollaborationRequest(BaseModel):
     team_type: str
     mode: Optional[str] = "hierarchical"
     context: Optional[Dict[str, Any]] = None
+    selected_agent_names: Optional[SelectedLegalAgentNames] = None
     enable_rag: bool = False
     knowledge_base_ids: Optional[List[str]] = None
     include_public_knowledge: bool = False
@@ -4062,6 +4343,17 @@ class MultiAgentCollaborationRequest(BaseModel):
     tenant_id: Optional[str] = "default"
     uploaded_file_path: Optional[str] = None
     legal_task_type: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class PreparedMultiAgentRequest:
+    """协作运行前的服务端权威请求快照。"""
+
+    agents: tuple[AgentProfile, ...]
+    team_name: str
+    context: Optional[Dict[str, Any]]
+    execution_policy: Optional[LegalCollaborationExecutionPolicy]
+    metadata: Dict[str, Any]
 
 
 def _get_multi_agent_team(team_type: str) -> tuple[List[AgentProfile], str]:
@@ -4077,6 +4369,578 @@ def _get_multi_agent_team(team_type: str) -> tuple[List[AgentProfile], str]:
     if team_type == "legal_contract_review":
         return LegalContractReviewTeam.get_agents(), "法律合同审查团队"
     raise HTTPException(status_code=400, detail=f"未知的团队类型: {team_type}")
+
+
+def _legal_agent_selection_metadata(selection) -> Dict[str, Any]:
+    """将领域层选择结果转换为响应 metadata。"""
+    return {
+        "team_type": "legal_contract_review",
+        "legal_task_type": selection.legal_task_type,
+        "selection_source": selection.selection_source,
+        "selected_agent_names": list(selection.selected_agent_names),
+        "missing_recommended_agent_names": list(
+            selection.missing_recommended_agent_names
+        ),
+        "capability_gaps": [
+            {
+                "agent_name": gap.agent_name,
+                "message": gap.message,
+            }
+            for gap in selection.capability_gaps
+        ],
+    }
+
+
+def _merge_multi_agent_metadata(*metadata_items: Dict[str, Any]) -> Dict[str, Any]:
+    """浅层合并协作 metadata，服务端权威字段后写入。"""
+    merged: Dict[str, Any] = {}
+    for metadata in metadata_items:
+        merged.update(metadata)
+    return merged
+
+
+def _new_legal_collaboration_request_id() -> str:
+    """生成法律多智能体日志关联 ID。"""
+    return f"mac_{uuid.uuid4().hex}"
+
+
+def _log_legal_collaboration_event(
+    *,
+    event: str,
+    request_id: str,
+    user_id: str,
+    tenant_id: str,
+    legal_task_type: str,
+    mode: str,
+    selection_source: str,
+    selected_agent_names: List[str],
+    status: str,
+    duration_ms: int,
+    error_code: Optional[str] = None,
+) -> None:
+    """记录最小法律协作事件，禁止写入正文、路径、prompt 或原始异常。"""
+    extra: Dict[str, Any] = {
+        "event": event,
+        "request_id": request_id,
+        "user_id": user_id,
+        "tenant_id": tenant_id,
+        "legal_task_type": legal_task_type,
+        "mode": mode,
+        "selection_source": selection_source,
+        "selected_agent_names": list(selected_agent_names),
+        "status": status,
+        "duration_ms": max(int(duration_ms), 0),
+    }
+    if error_code:
+        extra["error_code"] = error_code
+    logger.info(event, extra=extra)
+
+
+def _legal_collaboration_log_fields(
+    request: MultiAgentCollaborationRequest,
+    metadata: Dict[str, Any],
+) -> Dict[str, Any]:
+    """从服务端权威 metadata 提取日志用安全字段。"""
+    agent_selection = metadata.get("agent_selection") or {}
+    return {
+        "legal_task_type": agent_selection.get(
+            "legal_task_type",
+            request.legal_task_type or LegalContractReviewTeam.DEFAULT_TASK_TYPE,
+        ),
+        "mode": request.mode or "hierarchical",
+        "selection_source": agent_selection.get("selection_source", "unknown"),
+        "selected_agent_names": list(agent_selection.get("selected_agent_names") or []),
+    }
+
+
+def _log_legal_collaboration_started(
+    *,
+    request: MultiAgentCollaborationRequest,
+    current_user: Dict[str, Any],
+    metadata: Dict[str, Any],
+    request_id: str,
+) -> None:
+    """记录法律协作开始事件。"""
+    fields = _legal_collaboration_log_fields(request, metadata)
+    _log_legal_collaboration_event(
+        event="legal_collaboration_started",
+        request_id=request_id,
+        user_id=current_user["id"],
+        tenant_id=normalize_tenant_id(request.tenant_id),
+        status="started",
+        duration_ms=0,
+        **fields,
+    )
+
+
+def _log_legal_collaboration_finished(
+    *,
+    event: str,
+    request: MultiAgentCollaborationRequest,
+    current_user: Dict[str, Any],
+    metadata: Dict[str, Any],
+    request_id: str,
+    started_at: float,
+    status: str,
+    error_code: Optional[str] = None,
+) -> None:
+    """记录法律协作完成或失败事件。"""
+    fields = _legal_collaboration_log_fields(request, metadata)
+    _log_legal_collaboration_event(
+        event=event,
+        request_id=request_id,
+        user_id=current_user["id"],
+        tenant_id=normalize_tenant_id(request.tenant_id),
+        status=status,
+        duration_ms=int((time.perf_counter() - started_at) * 1000),
+        error_code=error_code,
+        **fields,
+    )
+
+
+def _prepare_multi_agent_request(
+    request: MultiAgentCollaborationRequest,
+) -> PreparedMultiAgentRequest:
+    """为普通和流式协作构造同一份运行时请求。"""
+    if request.team_type != "legal_contract_review":
+        agents, team_name = _get_multi_agent_team(request.team_type)
+        return PreparedMultiAgentRequest(
+            agents=tuple(agents),
+            team_name=team_name,
+            context=request.context,
+            execution_policy=None,
+            metadata={},
+        )
+
+    try:
+        selection = LegalContractReviewTeam.resolve_selection(
+            request.legal_task_type,
+            request.selected_agent_names,
+        )
+    except LegalAgentSelectionError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": exc.code},
+        ) from exc
+
+    selected_names = set(selection.selected_agent_names)
+    agents = tuple(
+        agent
+        for agent in LegalContractReviewTeam.get_agents()
+        if agent.name in selected_names
+    )
+    return PreparedMultiAgentRequest(
+        agents=agents,
+        team_name="法律合同审查团队",
+        context=_build_legal_base_context(
+            request.context,
+            selection.legal_task_type,
+        ),
+        execution_policy=LegalCollaborationExecutionPolicy(),
+        metadata={
+            "agent_selection": _legal_agent_selection_metadata(selection),
+        },
+    )
+
+
+def _raise_legal_context_type_error(field_name: str) -> None:
+    """返回稳定的法律 context 类型错误。"""
+    raise HTTPException(
+        status_code=422,
+        detail={
+            "code": "invalid_legal_context_field",
+            "field": field_name,
+        },
+    )
+
+
+def _truncate_legal_text(value: str, max_chars: int) -> str:
+    """确定性截断法律 context 文本。"""
+    if len(value) <= max_chars:
+        return value
+    suffix = LEGAL_TEXT_TRUNCATION_SUFFIX
+    return f"{value[: max_chars - len(suffix)]}{suffix}"
+
+
+def _normalize_legal_text(
+    value: Any,
+    max_chars: int,
+    field_name: str,
+    *,
+    collapse_whitespace: bool = True,
+) -> str:
+    """校验并裁剪法律 context 字符串字段。"""
+    if not isinstance(value, str):
+        _raise_legal_context_type_error(field_name)
+    normalized = re.sub(r"\s+", " ", value).strip() if collapse_whitespace else value.strip()
+    return _truncate_legal_text(normalized, max_chars)
+
+
+def _normalize_legal_filename(value: Any, field_name: str = "uploaded_file_name") -> str:
+    """只保留上传文件名 basename，兼容 Windows 和 POSIX 路径。"""
+    if not isinstance(value, str):
+        _raise_legal_context_type_error(field_name)
+    filename = re.split(r"[\\/]+", value.strip())[-1]
+    filename = re.sub(r"[\x00-\x1f\x7f]", "", filename).strip()
+    return _truncate_legal_text(filename, LEGAL_FILENAME_MAX_CHARS)
+
+
+def _normalize_non_negative_int(value: Any, field_name: str) -> Optional[int]:
+    """规范化摘要中的非负整数。"""
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int):
+        _raise_legal_context_type_error(field_name)
+    return max(value, 0)
+
+
+def _normalize_legal_string_list(
+    value: Any,
+    field_name: str,
+    max_items: int,
+    max_chars: int,
+) -> list[str]:
+    """规范化法律摘要中的字符串列表。"""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        _raise_legal_context_type_error(field_name)
+    items: list[str] = []
+    for item in value[:max_items]:
+        items.append(_normalize_legal_text(item, max_chars, field_name))
+    return items
+
+
+def _normalize_source_refs(value: Any) -> list[Dict[str, Any]]:
+    """只保留安全来源定位字段。"""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        _raise_legal_context_type_error("source_refs")
+
+    refs: list[Dict[str, Any]] = []
+    for raw_ref in value[:LEGAL_SOURCE_REFS_MAX_ITEMS]:
+        if not isinstance(raw_ref, dict):
+            _raise_legal_context_type_error("source_refs")
+        ref: Dict[str, Any] = {}
+        for field_name in LEGAL_SOURCE_REF_FIELDS:
+            if field_name not in raw_ref or raw_ref[field_name] is None:
+                continue
+            raw_value = raw_ref[field_name]
+            if field_name in {"page_number", "paragraph_index"}:
+                ref[field_name] = _normalize_non_negative_int(raw_value, field_name)
+            elif field_name == "source_name":
+                normalized = _normalize_legal_filename(raw_value, field_name)
+                if normalized:
+                    ref[field_name] = normalized
+            else:
+                normalized = _normalize_legal_text(
+                    raw_value,
+                    LEGAL_SHORT_FIELD_MAX_CHARS,
+                    field_name,
+                )
+                if normalized:
+                    ref[field_name] = normalized
+        if ref:
+            refs.append(ref)
+    return refs
+
+
+def _normalize_key_clause_summary(value: Any) -> list[Dict[str, Any]]:
+    """规范化结构摘要中的关键条款列表。"""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        _raise_legal_context_type_error("key_clause_summary")
+
+    clauses: list[Dict[str, Any]] = []
+    for raw_clause in value[:LEGAL_KEY_CLAUSE_MAX_ITEMS]:
+        if not isinstance(raw_clause, dict):
+            _raise_legal_context_type_error("key_clause_summary")
+        clause: Dict[str, Any] = {}
+        for field_name in ("clause_id", "title", "clause_type"):
+            if field_name in raw_clause and raw_clause[field_name] is not None:
+                normalized = _normalize_legal_text(
+                    raw_clause[field_name],
+                    LEGAL_SHORT_FIELD_MAX_CHARS,
+                    field_name,
+                )
+                if normalized:
+                    clause[field_name] = normalized
+        if "summary" in raw_clause and raw_clause["summary"] is not None:
+            normalized_summary = _normalize_legal_text(
+                raw_clause["summary"],
+                LEGAL_CLAUSE_REF_MAX_CHARS,
+                "summary",
+            )
+            if normalized_summary:
+                clause["summary"] = normalized_summary
+        source_refs = _normalize_source_refs(raw_clause.get("source_refs"))
+        if source_refs:
+            clause["source_refs"] = source_refs
+        if clause:
+            clauses.append(clause)
+    return clauses
+
+
+def _limit_legal_summary_size(summary: Dict[str, Any]) -> Dict[str, Any]:
+    """确保结构摘要序列化后不超过预算。"""
+    summaries_compacted = False
+    repeated_sources_compacted = False
+    while True:
+        serialized = json.dumps(summary, ensure_ascii=False, separators=(",", ":"))
+        if len(serialized) <= LEGAL_STRUCTURE_SUMMARY_MAX_CHARS:
+            return summary
+        clauses = summary.get("key_clause_summary")
+        if not summaries_compacted:
+            if isinstance(clauses, list):
+                for clause in clauses:
+                    if isinstance(clause, dict) and isinstance(clause.get("summary"), str):
+                        clause["summary"] = _truncate_legal_text(
+                            clause["summary"],
+                            120,
+                        )
+                summaries_compacted = True
+                continue
+        if not repeated_sources_compacted:
+            if isinstance(clauses, list):
+                for clause in clauses[1:]:
+                    if isinstance(clause, dict):
+                        clause.pop("source_refs", None)
+                repeated_sources_compacted = True
+                continue
+        if isinstance(clauses, list) and clauses:
+            clauses.pop()
+            continue
+        warnings = summary.get("warnings")
+        if isinstance(warnings, list) and warnings:
+            warnings.pop()
+            continue
+        return {}
+
+
+def _normalize_contract_structure_summary(value: Any) -> Dict[str, Any]:
+    """规范化合同结构摘要，只保留安全浅层子集。"""
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        _raise_legal_context_type_error("contract_structure_summary")
+
+    summary: Dict[str, Any] = {}
+    if value.get("contract_type") is not None:
+        contract_type = _normalize_legal_text(
+            value["contract_type"],
+            100,
+            "contract_structure_summary.contract_type",
+        )
+        if contract_type:
+            summary["contract_type"] = contract_type
+
+    for field_name in ("parties", "amount", "term", "effective_date"):
+        items = _normalize_legal_string_list(
+            value.get(field_name),
+            f"contract_structure_summary.{field_name}",
+            LEGAL_STRUCTURE_LIST_MAX_ITEMS,
+            LEGAL_SHORT_FIELD_MAX_CHARS,
+        )
+        if items:
+            summary[field_name] = items
+
+    for field_name in ("clause_count", "warning_count"):
+        normalized_int = _normalize_non_negative_int(
+            value.get(field_name),
+            f"contract_structure_summary.{field_name}",
+        )
+        if normalized_int is not None:
+            summary[field_name] = normalized_int
+
+    key_clause_summary = _normalize_key_clause_summary(
+        value.get("key_clause_summary")
+    )
+    if key_clause_summary:
+        summary["key_clause_summary"] = key_clause_summary
+
+    warnings = _normalize_legal_string_list(
+        value.get("warnings"),
+        "contract_structure_summary.warnings",
+        LEGAL_WARNING_MAX_ITEMS,
+        300,
+    )
+    if warnings:
+        summary["warnings"] = warnings
+
+    return _limit_legal_summary_size(summary)
+
+
+def _normalize_clause_refs(value: Any) -> Any:
+    """规范化独立 clause_refs 字段。"""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return _normalize_legal_text(
+            value,
+            LEGAL_CLAUSE_REF_MAX_CHARS,
+            "clause_refs",
+        )
+    if not isinstance(value, list):
+        _raise_legal_context_type_error("clause_refs")
+
+    refs: list[Any] = []
+    for item in value[:LEGAL_CLAUSE_REFS_MAX_ITEMS]:
+        if isinstance(item, str):
+            refs.append(
+                _normalize_legal_text(
+                    item,
+                    LEGAL_CLAUSE_REF_MAX_CHARS,
+                    "clause_refs",
+                )
+            )
+        elif isinstance(item, dict):
+            safe_ref: Dict[str, Any] = {}
+            for key, raw_value in item.items():
+                if key in {"file_path", "uploaded_file_path", "text_preview"}:
+                    continue
+                if raw_value is None:
+                    continue
+                if isinstance(raw_value, str):
+                    if key == "source_name":
+                        normalized_source_name = _normalize_legal_filename(
+                            raw_value,
+                            "clause_refs.source_name",
+                        )
+                        if normalized_source_name:
+                            safe_ref[key] = normalized_source_name
+                    else:
+                        safe_ref[key] = _normalize_legal_text(
+                            raw_value,
+                            LEGAL_CLAUSE_REF_MAX_CHARS,
+                            "clause_refs",
+                        )
+                elif isinstance(raw_value, (int, float, bool)):
+                    safe_ref[key] = raw_value
+            if safe_ref:
+                refs.append(safe_ref)
+        else:
+            _raise_legal_context_type_error("clause_refs")
+    return refs
+
+
+def _build_legal_base_context(
+    context: Optional[Dict[str, Any]],
+    legal_task_type: str,
+) -> Dict[str, Any]:
+    """为法律请求构建受控浅层 context。"""
+    if context is not None and not isinstance(context, dict):
+        _raise_legal_context_type_error("context")
+
+    raw_context = context or {}
+    context_size = len(
+        json.dumps(
+            raw_context,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    )
+    if context_size > LEGAL_CONTEXT_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail={"code": "legal_context_too_large"},
+        )
+
+    normalized: Dict[str, Any] = {}
+    if raw_context.get("contract_text") is not None:
+        contract_text = _normalize_legal_text(
+            raw_context["contract_text"],
+            LEGAL_CONTRACT_TEXT_MAX_CHARS,
+            "contract_text",
+        )
+        if contract_text:
+            normalized["contract_text"] = contract_text
+
+    if raw_context.get("contract_structure_summary") is not None:
+        summary = _normalize_contract_structure_summary(
+            raw_context["contract_structure_summary"]
+        )
+        if summary:
+            normalized["contract_structure_summary"] = summary
+
+    if raw_context.get("uploaded_file_id") is not None:
+        uploaded_file_id = _normalize_legal_text(
+            raw_context["uploaded_file_id"],
+            LEGAL_UPLOADED_FILE_ID_MAX_CHARS,
+            "uploaded_file_id",
+        )
+        if uploaded_file_id:
+            normalized["uploaded_file_id"] = uploaded_file_id
+
+    if raw_context.get("uploaded_file_name") is not None:
+        uploaded_file_name = _normalize_legal_filename(
+            raw_context["uploaded_file_name"]
+        )
+        if uploaded_file_name:
+            normalized["uploaded_file_name"] = uploaded_file_name
+
+    if raw_context.get("review_focus") is not None:
+        review_focus = _normalize_legal_text(
+            raw_context["review_focus"],
+            LEGAL_REVIEW_FOCUS_MAX_CHARS,
+            "review_focus",
+        )
+        if review_focus:
+            normalized["review_focus"] = review_focus
+
+    if raw_context.get("clause_refs") is not None:
+        clause_refs = _normalize_clause_refs(raw_context["clause_refs"])
+        if clause_refs:
+            normalized["clause_refs"] = clause_refs
+
+    for field_name in LEGAL_SHORT_CONTEXT_FIELDS:
+        if raw_context.get(field_name) is None:
+            continue
+        normalized_value = _normalize_legal_text(
+            raw_context[field_name],
+            LEGAL_SHORT_FIELD_MAX_CHARS,
+            field_name,
+        )
+        if normalized_value:
+            normalized[field_name] = normalized_value
+
+    normalized["legal_task_type"] = legal_task_type
+    return normalized
+
+
+def _collaboration_context_for_request(
+    request: MultiAgentCollaborationRequest,
+) -> Optional[Dict[str, Any]]:
+    """法律请求使用安全 context；非法律请求保持旧行为。"""
+    if request.team_type != "legal_contract_review":
+        return request.context
+    legal_task_type = request.legal_task_type or LegalContractReviewTeam.DEFAULT_TASK_TYPE
+    return _build_legal_base_context(request.context, legal_task_type)
+
+
+def _agent_profile_metadata(agent: AgentProfile) -> Dict[str, Any]:
+    """返回可安全暴露给前端的 Agent 基础信息。"""
+    return {
+        "name": agent.name,
+        "role": agent.role.value,
+        "description": agent.description,
+        "expertise": list(agent.expertise),
+    }
+
+
+def _legal_selection_policy_metadata() -> Dict[str, Any]:
+    """将法律团队领域选择策略转换为 JSON 友好的 metadata。"""
+    policy = LegalContractReviewTeam.get_selection_policy()
+    return {
+        "default_task_type": policy.default_task_type,
+        "required_agent_names": list(policy.required_agent_names),
+        "task_defaults": {
+            task_type: list(agent_names)
+            for task_type, agent_names in policy.task_defaults.items()
+        },
+        "capability_gaps": dict(policy.capability_gaps),
+    }
 
 
 def _knowledge_base_metadata_item(collection: Dict[str, Any]) -> Dict[str, Any]:
@@ -4199,6 +5063,10 @@ class WorkingMemoryUpdateRequest(BaseModel):
 @app.get("/api/multi-agent/teams")
 async def get_collaboration_teams():
     """获取可用的协作团队类型"""
+    legal_agents = [
+        _agent_profile_metadata(agent)
+        for agent in LegalContractReviewTeam.get_agents()
+    ]
     teams = {
         "software_dev": {
             "name": "软件开发团队",
@@ -4250,14 +5118,8 @@ async def get_collaboration_teams():
         "legal_contract_review": {
             "name": "法律合同审查团队",
             "description": "合同审查、风险识别、法律检索、合规检查、修改建议和审计留痕",
-            "agents": [
-                {"name": "contract_reviewer", "role": "coordinator", "expertise": ["合同审查", "任务拆解", "风险汇总", "审查结论"]},
-                {"name": "clause_risk_analyzer", "role": "specialist", "expertise": ["条款拆分", "风险识别", "风险分级"]},
-                {"name": "legal_researcher", "role": "advisor", "expertise": ["法律检索", "法规分析", "案例检索", "RAG检索"]},
-                {"name": "drafting_specialist", "role": "executor", "expertise": ["条款起草", "修改建议", "法律文书生成"]},
-                {"name": "compliance_checker", "role": "reviewer", "expertise": ["合规审查", "监管规则映射", "企业红线"]},
-                {"name": "audit_recorder", "role": "reviewer", "expertise": ["审计留痕", "引用追溯", "输出完整性校验"]}
-            ],
+            "agents": legal_agents,
+            "selection_policy": _legal_selection_policy_metadata(),
             "use_cases": ["合同审查", "合同风险识别", "修改建议与替代条款", "合规风险分析", "法律依据检索"]
         }
     }
@@ -4317,9 +5179,26 @@ async def multi_agent_collaborate(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """执行多智能体协作"""
+    legal_request_id: Optional[str] = None
+    legal_started_at: Optional[float] = None
+    metadata: Dict[str, Any] = {}
     try:
+        prepared = _prepare_multi_agent_request(request)
         knowledge_bases = _resolve_multi_agent_knowledge_bases(current_user, request)
         rag_agent = _build_multi_agent_rag_agent(knowledge_bases)
+        metadata = _merge_multi_agent_metadata(
+            _multi_agent_kb_metadata(knowledge_bases),
+            prepared.metadata,
+        )
+        if request.team_type == "legal_contract_review":
+            legal_request_id = _new_legal_collaboration_request_id()
+            legal_started_at = time.perf_counter()
+            _log_legal_collaboration_started(
+                request=request,
+                current_user=current_user,
+                metadata=metadata,
+                request_id=legal_request_id,
+            )
 
         # 获取 LLM 客户端
         llm_client = GiteeAIClient()
@@ -4329,15 +5208,25 @@ async def multi_agent_collaborate(
             llm_client=llm_client,
             mode=request.mode,
             verbose=True,
-            rag_agent=rag_agent
+            rag_agent=rag_agent,
+            execution_policy=prepared.execution_policy,
         )
         
-        # 根据团队类型注册 Agents
-        agents, _ = _get_multi_agent_team(request.team_type)
-        collaboration.register_agents(agents)
+        # 注册服务端最终确定的 Agents
+        collaboration.register_agents(prepared.agents)
         
         # 执行协作
-        result = collaboration.collaborate(request.input_text, request.context)
+        result = collaboration.collaborate(request.input_text, prepared.context)
+        if legal_request_id and legal_started_at is not None:
+            _log_legal_collaboration_finished(
+                event="legal_collaboration_completed",
+                request=request,
+                current_user=current_user,
+                metadata=metadata,
+                request_id=legal_request_id,
+                started_at=legal_started_at,
+                status="completed",
+            )
         
         return {
             "success": result.success,
@@ -4355,12 +5244,31 @@ async def multi_agent_collaborate(
             ],
             "execution_time": result.execution_time,
             "error_message": result.error_message,
-            "metadata": _multi_agent_kb_metadata(knowledge_bases)
+            "metadata": _merge_multi_agent_metadata(
+                getattr(result, "metadata", {}) or {},
+                metadata,
+            )
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        if legal_request_id and legal_started_at is not None:
+            _log_legal_collaboration_finished(
+                event="legal_collaboration_failed",
+                request=request,
+                current_user=current_user,
+                metadata=metadata,
+                request_id=legal_request_id,
+                started_at=legal_started_at,
+                status="failed",
+                error_code="legal_collaboration_runtime_failed",
+            )
+        if request.team_type == "legal_contract_review":
+            raise HTTPException(
+                status_code=500,
+                detail=LEGAL_COLLABORATION_RUNTIME_ERROR_MESSAGE,
+            ) from e
         raise HTTPException(status_code=500, detail=f"多智能体协作失败: {str(e)}")
 
 
@@ -4370,10 +5278,26 @@ async def multi_agent_collaborate_stream(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """流式执行多智能体协作"""
+    legal_request_id: Optional[str] = None
+    legal_started_at: Optional[float] = None
+    metadata: Dict[str, Any] = {}
     try:
+        prepared = _prepare_multi_agent_request(request)
         knowledge_bases = _resolve_multi_agent_knowledge_bases(current_user, request)
         rag_agent = _build_multi_agent_rag_agent(knowledge_bases)
-        metadata = _multi_agent_kb_metadata(knowledge_bases)
+        metadata = _merge_multi_agent_metadata(
+            _multi_agent_kb_metadata(knowledge_bases),
+            prepared.metadata,
+        )
+        if request.team_type == "legal_contract_review":
+            legal_request_id = _new_legal_collaboration_request_id()
+            legal_started_at = time.perf_counter()
+            _log_legal_collaboration_started(
+                request=request,
+                current_user=current_user,
+                metadata=metadata,
+                request_id=legal_request_id,
+            )
 
         # 获取 LLM 客户端
         llm_client = GiteeAIClient()
@@ -4388,26 +5312,43 @@ async def multi_agent_collaborate_stream(
                     llm_client=llm_client,
                     mode=request.mode,
                     verbose=False,  # 流式模式下关闭控制台输出
-                    rag_agent=rag_agent
+                    rag_agent=rag_agent,
+                    execution_policy=prepared.execution_policy,
                 )
                 
-                # 根据团队类型注册 Agents
-                agents, team_name = _get_multi_agent_team(request.team_type)
-                collaboration.register_agents(agents)
+                # 注册服务端最终确定的 Agents
+                collaboration.register_agents(prepared.agents)
                 
                 # 发送团队信息
                 team_info = {
                     "type": "team_info",
-                    "team_name": team_name,
-                    "agent_count": len(agents),
-                    "agents": [{"name": a.name, "role": a.role.value, "description": a.description} for a in agents],
+                    "team_name": prepared.team_name,
+                    "agent_count": len(prepared.agents),
+                    "agents": [{"name": a.name, "role": a.role.value, "description": a.description} for a in prepared.agents],
                     "mode": request.mode,
                     "metadata": metadata,
                 }
                 yield f"data: {json.dumps(team_info, ensure_ascii=False)}\n\n"
                 
                 # 执行协作
-                result = collaboration.collaborate(request.input_text, request.context)
+                result = collaboration.collaborate(
+                    request.input_text,
+                    prepared.context,
+                )
+                complete_metadata = _merge_multi_agent_metadata(
+                    getattr(result, "metadata", {}) or {},
+                    metadata,
+                )
+                if legal_request_id and legal_started_at is not None:
+                    _log_legal_collaboration_finished(
+                        event="legal_collaboration_completed",
+                        request=request,
+                        current_user=current_user,
+                        metadata=metadata,
+                        request_id=legal_request_id,
+                        started_at=legal_started_at,
+                        status="completed",
+                    )
                 
                 # 发送完成事件
                 complete_data = {
@@ -4427,14 +5368,30 @@ async def multi_agent_collaborate_stream(
                     ],
                     "execution_time": result.execution_time,
                     "error_message": result.error_message,
-                    "metadata": metadata,
+                    "metadata": complete_metadata,
                 }
                 yield f"data: {json.dumps(complete_data, ensure_ascii=False)}\n\n"
                 
             except Exception as e:
+                if legal_request_id and legal_started_at is not None:
+                    _log_legal_collaboration_finished(
+                        event="legal_collaboration_failed",
+                        request=request,
+                        current_user=current_user,
+                        metadata=metadata,
+                        request_id=legal_request_id,
+                        started_at=legal_started_at,
+                        status="failed",
+                        error_code="legal_collaboration_runtime_failed",
+                    )
+                error_message = (
+                    LEGAL_COLLABORATION_RUNTIME_ERROR_MESSAGE
+                    if request.team_type == "legal_contract_review"
+                    else f"协作执行失败: {str(e)}"
+                )
                 error_data = {
                     "type": "error",
-                    "message": f"协作执行失败: {str(e)}"
+                    "message": error_message
                 }
                 yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
         
@@ -4449,6 +5406,22 @@ async def multi_agent_collaborate_stream(
     except HTTPException:
         raise
     except Exception as e:
+        if legal_request_id and legal_started_at is not None:
+            _log_legal_collaboration_finished(
+                event="legal_collaboration_failed",
+                request=request,
+                current_user=current_user,
+                metadata=metadata,
+                request_id=legal_request_id,
+                started_at=legal_started_at,
+                status="failed",
+                error_code="legal_collaboration_runtime_failed",
+            )
+        if request.team_type == "legal_contract_review":
+            raise HTTPException(
+                status_code=500,
+                detail=LEGAL_COLLABORATION_RUNTIME_ERROR_MESSAGE,
+            ) from e
         raise HTTPException(status_code=500, detail=f"流式协作失败: {str(e)}")
 
 
