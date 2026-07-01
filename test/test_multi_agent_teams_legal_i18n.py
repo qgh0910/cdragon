@@ -63,14 +63,9 @@ def test_teams_xuserlang_ru_legal_agents(client):
     assert [agent["display_name"] for agent in legal_team["agents"]] == RU_DISPLAY_NAMES
 
 
-def test_teams_other_teams_remain_zh_when_en_header(client):
-    teams = _teams(client, "en")
-    assert [teams[key]["name"] for key in ("software_dev", "research", "content", "business")] == ["软件开发团队", "研究团队", "内容创作团队", "商业咨询团队"]
-
-
 def test_teams_response_structure_unchanged(client):
     teams = _teams(client, "en")
-    assert set(teams) == {"software_dev", "research", "content", "business", "legal_contract_review"}
+    assert set(teams) == {"legal_contract_review"}
     agents = _legal_agents(teams)
     assert [agent["name"] for agent in agents] == AGENT_IDS
     assert all({"name", "display_name", "role", "description", "expertise"} <= set(agent) for agent in agents)

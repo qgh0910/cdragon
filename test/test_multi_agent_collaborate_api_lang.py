@@ -67,7 +67,7 @@ def client(tmp_path, monkeypatch):
 def _payload():
     return {
         "input_text": "设计一个合同审查流程",
-        "team_type": "software_dev",
+        "team_type": "legal_contract_review",
         "mode": "sequential",
     }
 

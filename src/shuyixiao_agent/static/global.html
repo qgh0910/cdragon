@@ -2220,31 +2220,6 @@
                             <div id="teamUseCases"></div>
                         </div>
 
-                        <!-- 快速任务示例 -->
-                        <div style="display: none; background: #e7f3ff; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #007bff;">
-                            <h4 style="margin-bottom: 12px; color: #004085;">🚀 快速任务</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('设计并实现一个在线聊天应用', 'software_dev')" style="text-align: left; font-size: 13px;">
-                                    💻 开发聊天应用
-                                </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('Research deep learning applications in natural language processing', 'research')" style="text-align: left; font-size: 13px;">
-                                    🔬 NLP研究
-                                </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('Write an article about the future development of artificial intelligence', 'content')" style="text-align: left; font-size: 13px;">
-                                    📝 AI文章创作
-                                </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('分析企业数字化转型策略', 'business')" style="text-align: left; font-size: 13px;">
-                                    💼 数字化转型咨询
-                                </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('设计一个电商平台的系统架构', 'software_dev')" style="text-align: left; font-size: 13px;">
-                                    🏗️ 电商架构设计
-                                </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('制定产品推广和营销策略', 'content')" style="text-align: left; font-size: 13px;">
-                                    📢 营销策划
-                                </button>
-                            </div>
-                        </div>
-                        
                         <!-- 输入区域 -->
                         <div class="form-group">
                             <label>补充说明或具体问题：</label>
@@ -7602,13 +7577,6 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
         function PathNameFromFilePath(filePath) {
             return String(filePath || '').split(/[\\/]/).pop();
-        }
-
-        // 设置快速协作任务
-        function setQuickCollaboration(task, teamType) {
-            document.getElementById('collaborationTask').value = task;
-            document.getElementById('collaborationTeam').value = teamType;
-            updateTeamInfo();
         }
 
         function buildCollaborationSnapshot() {

@@ -738,18 +738,14 @@ def test_explicit_default_selection_still_reports_template_default(
     ]
 
 
-def test_non_legal_team_ignores_legal_fields_and_keeps_legacy_runtime(
+def test_unknown_team_type_is_rejected(
     tmp_path,
     monkeypatch,
 ):
-    """非法律团队携带法律字段时，应保持完整旧团队和原始 context。"""
+    """未知的 team_type 应被 400 拒绝，不进入协作运行时。"""
     client = _configure_multi_agent_routing_api_test_app(tmp_path, monkeypatch)
     _login(client)
     _patch_fake_runtime(monkeypatch)
-    forged_context = {
-        "contract_structure": {"secret": "非法律请求应原样保留"},
-        "uploaded_file_path": "/private/contract.txt",
-    }
 
     response = client.post(
         "/api/multi-agent/collaborate",
@@ -757,18 +753,11 @@ def test_non_legal_team_ignores_legal_fields_and_keeps_legacy_runtime(
             "input_text": "实现一个登录接口",
             "team_type": "software_dev",
             "mode": "hierarchical",
-            "legal_task_type": "unknown_task",
-            "selected_agent_names": ["not_a_legal_agent"],
-            "context": forged_context,
         },
     )
 
-    assert response.status_code == 200
-    collaboration = _FakeCollaboration.instances[-1]
-    assert len(collaboration.agents) == len(web_app.SoftwareDevelopmentTeam.get_agents())
-    assert collaboration.collaborate_calls[-1]["context"] == forged_context
-    assert collaboration.execution_policy is None
-    assert "agent_selection" not in response.json()["metadata"]
+    assert response.status_code == 400
+    assert _FakeCollaboration.instances == []
 
 
 def test_legal_team_agents_are_generated_from_domain_definition(
@@ -833,22 +822,15 @@ def test_legal_team_exposes_selection_policy_from_domain_contract(
     )
 
 
-def test_non_legal_teams_do_not_expose_legal_selection_policy(
+def test_teams_endpoint_only_exposes_legal_contract_review(
     tmp_path,
     monkeypatch,
 ):
-    """非法律团队应保持既有结构，不增加法律选择策略字段。"""
+    """/api/multi-agent/teams 应只暴露法律合同审查团队。"""
     client = _configure_multi_agent_routing_api_test_app(tmp_path, monkeypatch)
     _login(client)
 
     teams = _get_teams(client)
 
-    non_legal_team_keys = {
-        "software_dev",
-        "research",
-        "content",
-        "business",
-    }
-    assert set(teams) == non_legal_team_keys | {"legal_contract_review"}
-    for team_key in non_legal_team_keys:
-        assert "selection_policy" not in teams[team_key]
+    assert set(teams) == {"legal_contract_review"}
+    assert "selection_policy" in teams["legal_contract_review"]

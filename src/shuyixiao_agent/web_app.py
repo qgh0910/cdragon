@@ -85,10 +85,6 @@ from .agents.multi_agent_collaboration import (
     CollaborationMode,
     AgentRole,
     AgentProfile,
-    SoftwareDevelopmentTeam,
-    ResearchTeam,
-    ContentCreationTeam,
-    BusinessConsultingTeam,
     LegalAgentSelectionError,
     LegalCollaborationExecutionPolicy,
     LegalContractReviewTeam
@@ -4370,14 +4366,6 @@ class PreparedMultiAgentRequest:
 
 def _get_multi_agent_team(team_type: str) -> tuple[List[AgentProfile], str]:
     """按团队类型返回 Agent 列表和展示名。"""
-    if team_type == "software_dev":
-        return SoftwareDevelopmentTeam.get_agents(), "软件开发团队"
-    if team_type == "research":
-        return ResearchTeam.get_agents(), "研究团队"
-    if team_type == "content":
-        return ContentCreationTeam.get_agents(), "内容创作团队"
-    if team_type == "business":
-        return BusinessConsultingTeam.get_agents(), "商业咨询团队"
     if team_type == "legal_contract_review":
         return LegalContractReviewTeam.get_agents(), "法律合同审查团队"
     raise HTTPException(status_code=400, detail=f"未知的团队类型: {team_type}")
@@ -5103,53 +5091,6 @@ async def get_collaboration_teams(request: Request):
         for agent in LegalContractReviewTeam.get_agents()
     ]
     teams = {
-        "software_dev": {
-            "name": "软件开发团队",
-            "description": "产品经理、系统架构师、开发工程师、QA 工程师协同工作",
-            "agents": [
-                {"name": "产品经理", "role": "coordinator", "expertise": ["需求分析", "产品规划"]},
-                {"name": "系统架构师", "role": "specialist", "expertise": ["系统架构", "技术选型"]},
-                {"name": "后端开发工程师", "role": "executor", "expertise": ["后端开发", "API设计"]},
-                {"name": "前端开发工程师", "role": "executor", "expertise": ["前端开发", "UI实现"]},
-                {"name": "QA工程师", "role": "reviewer", "expertise": ["测试", "质量保证"]}
-            ],
-            "use_cases": ["需求分析与设计", "系统架构设计", "功能开发规划", "代码质量审查"]
-        },
-        "research": {
-            "name": "研究团队",
-            "description": "研究负责人、理论专家、数据科学家、实验研究者、同行评审专家协同研究",
-            "agents": [
-                {"name": "研究负责人", "role": "coordinator", "expertise": ["研究规划", "团队协调"]},
-                {"name": "理论研究者", "role": "specialist", "expertise": ["理论分析", "模型构建"]},
-                {"name": "数据科学家", "role": "specialist", "expertise": ["数据分析", "统计建模"]},
-                {"name": "实验研究者", "role": "executor", "expertise": ["实验设计", "数据收集"]},
-                {"name": "同行评审专家", "role": "reviewer", "expertise": ["学术评审", "质量控制"]}
-            ],
-            "use_cases": ["研究课题设计", "数据分析方案", "实验方案设计", "论文质量评审"]
-        },
-        "content": {
-            "name": "内容创作团队",
-            "description": "内容策略师、撰写者、编辑、SEO专家协同创作",
-            "agents": [
-                {"name": "内容策略师", "role": "coordinator", "expertise": ["内容策划", "受众分析"]},
-                {"name": "内容撰写者", "role": "executor", "expertise": ["写作", "文案"]},
-                {"name": "内容编辑", "role": "reviewer", "expertise": ["编辑", "校对"]},
-                {"name": "SEO专家", "role": "advisor", "expertise": ["SEO", "关键词优化"]}
-            ],
-            "use_cases": ["文章策划与创作", "营销文案撰写", "技术文档编写", "内容SEO优化"]
-        },
-        "business": {
-            "name": "商业咨询团队",
-            "description": "首席顾问、商业分析师、财务顾问、实施专家、质量保证专家协同咨询",
-            "agents": [
-                {"name": "首席顾问", "role": "coordinator", "expertise": ["战略规划", "项目管理"]},
-                {"name": "商业分析师", "role": "specialist", "expertise": ["业务分析", "市场研究"]},
-                {"name": "财务顾问", "role": "specialist", "expertise": ["财务分析", "成本效益"]},
-                {"name": "实施专家", "role": "executor", "expertise": ["方案实施", "变革管理"]},
-                {"name": "质量保证专家", "role": "reviewer", "expertise": ["质量审核", "风险评估"]}
-            ],
-            "use_cases": ["业务战略规划", "市场分析报告", "财务可行性分析", "项目实施方案"]
-        },
         "legal_contract_review": {
             "name": translate("team.legal_contract_review.name", lang),
             "description": translate(
