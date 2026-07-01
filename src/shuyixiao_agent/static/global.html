@@ -2982,6 +2982,10 @@
         async function apiFetch(input, options = {}) {
             const { redirectOnUnauthorized = true, ...fetchOptions } = options;
             const headers = new Headers(fetchOptions.headers || {});
+            const lang = localStorage.getItem('gaia_lang');
+            if (lang) {
+                headers.set('X-User-Lang', lang);
+            }
             const method = String(fetchOptions.method || 'GET').toUpperCase();
 
             if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && csrfToken && !headers.has('X-CSRF-Token')) {

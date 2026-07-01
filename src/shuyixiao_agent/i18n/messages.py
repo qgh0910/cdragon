@@ -1,0 +1,127 @@
+"""后端静态翻译表。"""
+
+from typing import Mapping
+
+SUPPORTED_LANGS = ("en", "zh", "ru")
+DEFAULT_LANG = "zh"
+
+MESSAGES: Mapping[str, Mapping[str, str]] = {
+    "mode.sequential.name": {
+        "en": "Sequential Collaboration",
+        "zh": "顺序协作",
+        "ru": "Последовательное взаимодействие",
+    },
+    "mode.sequential.description": {
+        "en": "Agents work in sequence, with each agent building on previous results",
+        "zh": "Agents 按顺序工作，后面的 Agent 基于前面的结果继续工作",
+        "ru": "Агенты работают последовательно, используя результаты предыдущих агентов",
+    },
+    "mode.sequential.use_case": {
+        "en": "Best for tasks with a clearly defined workflow",
+        "zh": "适合有明确流程的任务",
+        "ru": "Подходит для задач с чётко определённым процессом",
+    },
+    "mode.parallel.name": {
+        "en": "Parallel Collaboration",
+        "zh": "并行协作",
+        "ru": "Параллельное взаимодействие",
+    },
+    "mode.parallel.description": {
+        "en": "All agents work simultaneously, then their results are consolidated",
+        "zh": "所有 Agents 同时工作，然后整合各自的结果",
+        "ru": "Все агенты работают одновременно, после чего их результаты объединяются",
+    },
+    "mode.parallel.use_case": {
+        "en": "Best for tasks requiring analysis from multiple perspectives",
+        "zh": "适合需要多角度分析的任务",
+        "ru": "Подходит для задач, требующих анализа с разных точек зрения",
+    },
+    "mode.hierarchical.name": {
+        "en": "Hierarchical Collaboration",
+        "zh": "层级协作",
+        "ru": "Иерархическое взаимодействие",
+    },
+    "mode.hierarchical.description": {
+        "en": "A coordinator assigns tasks, specialists execute them, and reviewers verify the results",
+        "zh": "有明确的管理层级，协调者分配任务，专家执行，审核者检查",
+        "ru": "Координатор распределяет задачи, специалисты выполняют их, а рецензенты проверяют результаты",
+    },
+    "mode.hierarchical.use_case": {
+        "en": "Recommended for complex tasks requiring specialized roles",
+        "zh": "适合复杂的、需要专业分工的任务（推荐）",
+        "ru": "Рекомендуется для сложных задач, требующих профессионального разделения ролей",
+    },
+    "mode.peer_to_peer.name": {
+        "en": "Peer-to-Peer Collaboration",
+        "zh": "对等协作",
+        "ru": "Одноранговое взаимодействие",
+    },
+    "mode.peer_to_peer.description": {
+        "en": "Agents collaborate as peers, discussing and improving each other's work",
+        "zh": "Agents 平等协作，相互讨论和改进",
+        "ru": "Агенты взаимодействуют на равных, обсуждая и улучшая работу друг друга",
+    },
+    "mode.peer_to_peer.use_case": {
+        "en": "Best for tasks requiring iterative discussion and refinement",
+        "zh": "适合需要反复讨论和优化的任务",
+        "ru": "Подходит для задач, требующих многократного обсуждения и доработки",
+    },
+    "mode.hybrid.name": {
+        "en": "Hybrid Collaboration",
+        "zh": "混合模式",
+        "ru": "Гибридное взаимодействие",
+    },
+    "mode.hybrid.description": {
+        "en": "Combines the strengths of multiple collaboration approaches",
+        "zh": "结合多种协作方式的优势",
+        "ru": "Сочетает преимущества нескольких подходов к взаимодействию",
+    },
+    "mode.hybrid.use_case": {
+        "en": "Adapts flexibly to different scenarios",
+        "zh": "灵活适应不同场景",
+        "ru": "Гибко адаптируется к различным сценариям",
+    },
+    "team.legal_contract_review.name": {"en": "Legal Contract Review Team", "zh": "法律合同审查团队", "ru": "Команда юридической проверки договоров"},
+    "team.legal_contract_review.description": {"en": "Contract review, risk identification, legal research, compliance checks, drafting recommendations and audit trails", "zh": "合同审查、风险识别、法律检索、合规检查、修改建议和审计留痕", "ru": "Проверка договоров, выявление рисков, правовой поиск, комплаенс, рекомендации по изменениям и аудиторский след"},
+    "team.legal_contract_review.use_case.0": {"en": "Contract review", "zh": "合同审查", "ru": "Проверка договоров"},
+    "team.legal_contract_review.use_case.1": {"en": "Contract risk identification", "zh": "合同风险识别", "ru": "Выявление договорных рисков"},
+    "team.legal_contract_review.use_case.2": {"en": "Revision suggestions and alternative clauses", "zh": "修改建议与替代条款", "ru": "Рекомендации по изменениям и альтернативные условия"},
+    "team.legal_contract_review.use_case.3": {"en": "Compliance risk analysis", "zh": "合规风险分析", "ru": "Анализ комплаенс-рисков"},
+    "team.legal_contract_review.use_case.4": {"en": "Legal research", "zh": "法律依据检索", "ru": "Правовой поиск"},
+    "agent.contract_reviewer.name": {"en": "Contract Review Coordinator", "zh": "合同审查协调员", "ru": "Координатор проверки договоров"},
+    "agent.contract_reviewer.description": {"en": "Coordinates the overall contract review", "zh": "合同审查主控智能体", "ru": "Координирует комплексную проверку договора"},
+    "agent.contract_reviewer.expertise.0": {"en": "Contract review", "zh": "合同审查", "ru": "Проверка договоров"},
+    "agent.contract_reviewer.expertise.1": {"en": "Task decomposition", "zh": "任务拆解", "ru": "Декомпозиция задач"},
+    "agent.contract_reviewer.expertise.2": {"en": "Risk consolidation", "zh": "风险汇总", "ru": "Консолидация рисков"},
+    "agent.contract_reviewer.expertise.3": {"en": "Review conclusions", "zh": "审查结论", "ru": "Заключения по результатам проверки"},
+    "agent.clause_risk_analyzer.name": {"en": "Clause Risk Analyst", "zh": "条款风险分析师", "ru": "Аналитик рисков договорных условий"},
+    "agent.clause_risk_analyzer.description": {"en": "Identifies risks in individual contract clauses", "zh": "条款风险识别智能体", "ru": "Выявляет риски в отдельных условиях договора"},
+    "agent.clause_risk_analyzer.expertise.0": {"en": "Clause decomposition", "zh": "条款拆分", "ru": "Декомпозиция условий"},
+    "agent.clause_risk_analyzer.expertise.1": {"en": "Risk identification", "zh": "风险识别", "ru": "Выявление рисков"},
+    "agent.clause_risk_analyzer.expertise.2": {"en": "Risk classification", "zh": "风险分级", "ru": "Классификация рисков"},
+    "agent.clause_risk_analyzer.expertise.3": {"en": "Contract defect analysis", "zh": "合同缺陷分析", "ru": "Анализ недостатков договора"},
+    "agent.legal_researcher.name": {"en": "Legal Researcher", "zh": "法律研究员", "ru": "Юридический исследователь"},
+    "agent.legal_researcher.description": {"en": "Researches verifiable legal authorities", "zh": "法律依据检索智能体", "ru": "Ищет проверяемые правовые основания"},
+    "agent.legal_researcher.expertise.0": {"en": "Legal research", "zh": "法律检索", "ru": "Правовой поиск"},
+    "agent.legal_researcher.expertise.1": {"en": "Regulatory analysis", "zh": "法规分析", "ru": "Анализ законодательства"},
+    "agent.legal_researcher.expertise.2": {"en": "Case law research", "zh": "案例检索", "ru": "Поиск судебной практики"},
+    "agent.legal_researcher.expertise.3": {"en": "RAG retrieval", "zh": "RAG检索", "ru": "RAG-поиск"},
+    "agent.drafting_specialist.name": {"en": "Legal Drafting Specialist", "zh": "法律文书起草专家", "ru": "Специалист по юридическим документам"},
+    "agent.drafting_specialist.description": {"en": "Drafts legal text and actionable revisions", "zh": "法律文本生成智能体", "ru": "Готовит юридические тексты и применимые изменения"},
+    "agent.drafting_specialist.expertise.0": {"en": "Clause drafting", "zh": "条款起草", "ru": "Подготовка договорных условий"},
+    "agent.drafting_specialist.expertise.1": {"en": "Revision suggestions", "zh": "修改建议", "ru": "Рекомендации по изменениям"},
+    "agent.drafting_specialist.expertise.2": {"en": "Legal document drafting", "zh": "法律文书生成", "ru": "Подготовка юридических документов"},
+    "agent.drafting_specialist.expertise.3": {"en": "Text optimization", "zh": "文本优化", "ru": "Оптимизация текста"},
+    "agent.compliance_checker.name": {"en": "Compliance Reviewer", "zh": "合规审查专员", "ru": "Специалист по комплаенсу"},
+    "agent.compliance_checker.description": {"en": "Reviews regulatory and compliance risks", "zh": "合规风险审查智能体", "ru": "Проверяет регуляторные и комплаенс-риски"},
+    "agent.compliance_checker.expertise.0": {"en": "Compliance review", "zh": "合规审查", "ru": "Комплаенс-проверка"},
+    "agent.compliance_checker.expertise.1": {"en": "Regulatory mapping", "zh": "监管规则映射", "ru": "Сопоставление регуляторных требований"},
+    "agent.compliance_checker.expertise.2": {"en": "Corporate red lines", "zh": "企业红线", "ru": "Корпоративные ограничения"},
+    "agent.compliance_checker.expertise.3": {"en": "Remediation recommendations", "zh": "整改建议", "ru": "Рекомендации по устранению нарушений"},
+    "agent.audit_recorder.name": {"en": "Audit Recorder", "zh": "审计留痕记录员", "ru": "Специалист по аудиторскому следу"},
+    "agent.audit_recorder.description": {"en": "Records audit trails and checks explainability", "zh": "审计留痕与可解释性智能体", "ru": "Фиксирует аудиторский след и проверяет объяснимость"},
+    "agent.audit_recorder.expertise.0": {"en": "Audit trails", "zh": "审计留痕", "ru": "Аудиторский след"},
+    "agent.audit_recorder.expertise.1": {"en": "Explainability checks", "zh": "可解释性检查", "ru": "Проверка объяснимости"},
+    "agent.audit_recorder.expertise.2": {"en": "Citation traceability", "zh": "引用追溯", "ru": "Прослеживаемость ссылок"},
+    "agent.audit_recorder.expertise.3": {"en": "Output completeness validation", "zh": "输出完整性校验", "ru": "Проверка полноты результатов"},
+}

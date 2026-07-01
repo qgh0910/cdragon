@@ -28,6 +28,7 @@ from types import MappingProxyType
 from datetime import datetime
 import time
 from ..config import settings
+from ..i18n import DEFAULT_LANG, build_llm_language_suffix
 
 
 class AgentRole(Enum):
@@ -70,6 +71,7 @@ class AgentProfile:
     enable_rag: bool = False    # 是否启用 RAG 检索
     rag_top_k: int = 5          # RAG 检索返回数量
     rag_mode: str = "hybrid"    # RAG 检索模式：vector/keyword/hybrid
+    i18n_prefix: Optional[str] = None  # 可选国际化 key 前缀
     
 
 @dataclass
@@ -296,6 +298,7 @@ class MultiAgentCollaboration:
         max_rounds: int = 5,
         rag_agent: Optional[Any] = None,
         execution_policy: Optional[LegalCollaborationExecutionPolicy] = None,
+        lang: str = DEFAULT_LANG,
     ):
         """
         初始化多智能体协作系统
@@ -307,6 +310,7 @@ class MultiAgentCollaboration:
             max_rounds: 最大协作轮数
             rag_agent: 可选 RAG Agent，用于为启用 RAG 的 Agent 注入知识库上下文
             execution_policy: 可选法律协作执行策略，默认保持旧行为
+            lang: LLM 输出语言，默认中文
         """
         self.llm_client = llm_client
         self.mode = CollaborationMode(mode) if isinstance(mode, str) else mode
@@ -314,6 +318,7 @@ class MultiAgentCollaboration:
         self.max_rounds = max_rounds
         self.rag_agent = rag_agent
         self.execution_policy = execution_policy
+        self.lang = lang
 
         self.agents: Dict[str, AgentProfile] = {}
         self.messages: List[Message] = []
@@ -731,6 +736,7 @@ class MultiAgentCollaboration:
             prompt += f"{rag_context}\n\n"
 
         prompt += f"## 任务\n{input_text}\n\n请提供你的专业见解："
+        prompt += build_llm_language_suffix(self.lang)
         return prompt
 
     def _invoke_agent(
@@ -2230,6 +2236,7 @@ class LegalContractReviewTeam:
         return [
             AgentProfile(
                 name="contract_reviewer",
+                i18n_prefix="agent.contract_reviewer",
                 role=AgentRole.COORDINATOR,
                 description="合同审查主控智能体",
                 expertise=["合同审查", "任务拆解", "风险汇总", "审查结论"],
@@ -2247,6 +2254,7 @@ class LegalContractReviewTeam:
             ),
             AgentProfile(
                 name="clause_risk_analyzer",
+                i18n_prefix="agent.clause_risk_analyzer",
                 role=AgentRole.SPECIALIST,
                 description="条款风险识别智能体",
                 expertise=["条款拆分", "风险识别", "风险分级", "合同缺陷分析"],
@@ -2264,6 +2272,7 @@ class LegalContractReviewTeam:
             ),
             AgentProfile(
                 name="legal_researcher",
+                i18n_prefix="agent.legal_researcher",
                 role=AgentRole.ADVISOR,
                 description="法律依据检索智能体",
                 expertise=["法律检索", "法规分析", "案例检索", "RAG检索"],
@@ -2284,6 +2293,7 @@ class LegalContractReviewTeam:
             ),
             AgentProfile(
                 name="drafting_specialist",
+                i18n_prefix="agent.drafting_specialist",
                 role=AgentRole.EXECUTOR,
                 description="法律文本生成智能体",
                 expertise=["条款起草", "修改建议", "法律文书生成", "文本优化"],
@@ -2301,6 +2311,7 @@ class LegalContractReviewTeam:
             ),
             AgentProfile(
                 name="compliance_checker",
+                i18n_prefix="agent.compliance_checker",
                 role=AgentRole.REVIEWER,
                 description="合规风险审查智能体",
                 expertise=["合规审查", "监管规则映射", "企业红线", "整改建议"],
@@ -2321,6 +2332,7 @@ class LegalContractReviewTeam:
             ),
             AgentProfile(
                 name="audit_recorder",
+                i18n_prefix="agent.audit_recorder",
                 role=AgentRole.REVIEWER,
                 description="审计留痕与可解释性智能体",
                 expertise=["审计留痕", "可解释性检查", "引用追溯", "输出完整性校验"],

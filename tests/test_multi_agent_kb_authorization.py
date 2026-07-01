@@ -32,6 +32,7 @@ class _FakeCollaboration:
         max_rounds=5,
         rag_agent=None,
         execution_policy=None,
+        lang="zh",
     ):
         self.llm_client = llm_client
         self.mode = mode
@@ -39,6 +40,7 @@ class _FakeCollaboration:
         self.max_rounds = max_rounds
         self.rag_agent = rag_agent
         self.execution_policy = execution_policy
+        self.lang = lang
         self.agents = []
         self.collaborate_calls = []
         self.__class__.instances.append(self)

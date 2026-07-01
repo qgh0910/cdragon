@@ -104,6 +104,7 @@ from .tools.predefined_tools import PredefinedToolsRegistry
 from .tools.basic_tools import get_basic_tools
 from .config import settings
 from .gitee_ai_client import GiteeAIClient
+from .i18n import DEFAULT_LANG, get_user_lang, translate
 from .database_helper import DatabaseHelper
 from .auth import storage as auth_storage
 from .auth.dependencies import AUTH_COOKIE_NAME, get_current_user, resolve_user_from_session_token
@@ -4930,13 +4931,35 @@ def _collaboration_context_for_request(
     return _build_legal_base_context(request.context, legal_task_type)
 
 
-def _agent_profile_metadata(agent: AgentProfile) -> Dict[str, Any]:
+def _agent_profile_metadata(
+    agent: AgentProfile,
+    lang: str = DEFAULT_LANG,
+) -> Dict[str, Any]:
     """返回可安全暴露给前端的 Agent 基础信息。"""
+    display_name = agent.name
+    description = agent.description
+    expertise = list(agent.expertise)
+    if agent.i18n_prefix:
+        display_name = translate(
+            f"{agent.i18n_prefix}.name", lang, fallback=agent.name
+        )
+        description = translate(
+            f"{agent.i18n_prefix}.description", lang, fallback=agent.description
+        )
+        expertise = [
+            translate(
+                f"{agent.i18n_prefix}.expertise.{index}",
+                lang,
+                fallback=item,
+            )
+            for index, item in enumerate(agent.expertise)
+        ]
     return {
         "name": agent.name,
+        "display_name": display_name,
         "role": agent.role.value,
-        "description": agent.description,
-        "expertise": list(agent.expertise),
+        "description": description,
+        "expertise": expertise,
     }
 
 
@@ -5072,10 +5095,11 @@ class WorkingMemoryUpdateRequest(BaseModel):
 
 
 @app.get("/api/multi-agent/teams")
-async def get_collaboration_teams():
+async def get_collaboration_teams(request: Request):
     """获取可用的协作团队类型"""
+    lang = get_user_lang(request)
     legal_agents = [
-        _agent_profile_metadata(agent)
+        _agent_profile_metadata(agent, lang)
         for agent in LegalContractReviewTeam.get_agents()
     ]
     teams = {
@@ -5127,11 +5151,16 @@ async def get_collaboration_teams():
             "use_cases": ["业务战略规划", "市场分析报告", "财务可行性分析", "项目实施方案"]
         },
         "legal_contract_review": {
-            "name": "法律合同审查团队",
-            "description": "合同审查、风险识别、法律检索、合规检查、修改建议和审计留痕",
+            "name": translate("team.legal_contract_review.name", lang),
+            "description": translate(
+                "team.legal_contract_review.description", lang
+            ),
             "agents": legal_agents,
             "selection_policy": _legal_selection_policy_metadata(),
-            "use_cases": ["合同审查", "合同风险识别", "修改建议与替代条款", "合规风险分析", "法律依据检索"]
+            "use_cases": [
+                translate(f"team.legal_contract_review.use_case.{index}", lang)
+                for index in range(5)
+            ],
         }
     }
     
@@ -5143,39 +5172,40 @@ async def get_collaboration_teams():
 
 
 @app.get("/api/multi-agent/modes")
-async def get_collaboration_modes():
+async def get_collaboration_modes(request: Request):
     """获取可用的协作模式"""
+    lang = get_user_lang(request)
     modes = {
         "sequential": {
-            "name": "顺序协作",
-            "description": "Agents 按顺序工作，后面的 Agent 基于前面的结果继续工作",
+            "name": translate("mode.sequential.name", lang),
+            "description": translate("mode.sequential.description", lang),
             "icon": "🔄",
-            "use_case": "适合有明确流程的任务"
+            "use_case": translate("mode.sequential.use_case", lang),
         },
         "parallel": {
-            "name": "并行协作",
-            "description": "所有 Agents 同时工作，然后整合各自的结果",
+            "name": translate("mode.parallel.name", lang),
+            "description": translate("mode.parallel.description", lang),
             "icon": "⚡",
-            "use_case": "适合需要多角度分析的任务"
+            "use_case": translate("mode.parallel.use_case", lang),
         },
         "hierarchical": {
-            "name": "层级协作",
-            "description": "有明确的管理层级，协调者分配任务，专家执行，审核者检查",
+            "name": translate("mode.hierarchical.name", lang),
+            "description": translate("mode.hierarchical.description", lang),
             "icon": "🏢",
-            "use_case": "适合复杂的、需要专业分工的任务（推荐）"
+            "use_case": translate("mode.hierarchical.use_case", lang),
         },
         "peer_to_peer": {
-            "name": "对等协作",
-            "description": "Agents 平等协作，相互讨论和改进",
+            "name": translate("mode.peer_to_peer.name", lang),
+            "description": translate("mode.peer_to_peer.description", lang),
             "icon": "🤝",
-            "use_case": "适合需要反复讨论和优化的任务"
+            "use_case": translate("mode.peer_to_peer.use_case", lang),
         },
         "hybrid": {
-            "name": "混合模式",
-            "description": "结合多种协作方式的优势",
+            "name": translate("mode.hybrid.name", lang),
+            "description": translate("mode.hybrid.description", lang),
             "icon": "🔀",
-            "use_case": "灵活适应不同场景"
-        }
+            "use_case": translate("mode.hybrid.use_case", lang),
+        },
     }
     
     return {
@@ -5187,9 +5217,11 @@ async def get_collaboration_modes():
 @app.post("/api/multi-agent/collaborate")
 async def multi_agent_collaborate(
     request: MultiAgentCollaborationRequest,
+    http_request: Request,
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """执行多智能体协作"""
+    lang = get_user_lang(http_request)
     legal_request_id: Optional[str] = None
     legal_started_at: Optional[float] = None
     metadata: Dict[str, Any] = {}
@@ -5221,6 +5253,7 @@ async def multi_agent_collaborate(
             verbose=True,
             rag_agent=rag_agent,
             execution_policy=prepared.execution_policy,
+            lang=lang,
         )
         
         # 注册服务端最终确定的 Agents
@@ -5286,9 +5319,11 @@ async def multi_agent_collaborate(
 @app.post("/api/multi-agent/collaborate/stream")
 async def multi_agent_collaborate_stream(
     request: MultiAgentCollaborationRequest,
+    http_request: Request,
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """流式执行多智能体协作"""
+    lang = get_user_lang(http_request)
     legal_request_id: Optional[str] = None
     legal_started_at: Optional[float] = None
     metadata: Dict[str, Any] = {}
@@ -5325,6 +5360,7 @@ async def multi_agent_collaborate_stream(
                     verbose=False,  # 流式模式下关闭控制台输出
                     rag_agent=rag_agent,
                     execution_policy=prepared.execution_policy,
+                    lang=lang,
                 )
                 
                 # 注册服务端最终确定的 Agents
