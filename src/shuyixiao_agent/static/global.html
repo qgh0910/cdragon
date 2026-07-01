@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>紫微星 ChineseDragon-法律生产力操作系统</title>
+    <title>Gaia International World Model Legal Intelligence System</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /><stop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23grad)'/><circle cx='35' cy='40' r='8' fill='white'/><circle cx='65' cy='40' r='8' fill='white'/><path d='M 30 65 Q 50 75 70 65' stroke='white' stroke-width='6' fill='none' stroke-linecap='round'/></svg>">
     
@@ -134,7 +134,7 @@
             display: none !important;
         }
 
-        /* 聊天区域 */
+        /* Chat Area */
         .chat-area {
             display: flex;
             flex-direction: column;
@@ -231,6 +231,29 @@
             background: #5a6268;
         }
 
+
+        .lang-switcher {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .lang-switcher select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+        .lang-switcher select option {
+            color: #333;
+            background: white;
+        }
+        .lang-switcher select:focus {
+            border-color: rgba(255,255,255,0.6);
+        }
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -385,7 +408,7 @@
             opacity: 0.3;
         }
 
-        /* RAG 区域 */
+        /* RAG Area */
         .rag-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -603,7 +626,7 @@
             background: #a1a1a1;
         }
 
-        /* 文档浏览器样式 */
+        /* Document Browser Styles */
         .doc-browser {
             max-height: 400px;
             overflow-y: auto;
@@ -713,7 +736,7 @@
             font-weight: 600;
         }
 
-        /* 模态框样式 */
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -882,18 +905,18 @@
 <body class="client-mode">
     <div id="authOverlay" class="auth-overlay">
         <div class="auth-card">
-            <h2>登录紫微星 ChineseDragon-法律生产力操作系统</h2>
-            <p>请使用已开通的账号进入合同审查、知识库和多智能体工作台。</p>
+            <h2 data-i18n="login_title">Login to Gaia International World Model Legal Intelligence System</h2>
+            <p data-i18n="login_subtitle">Please use your registered account to access the contract review, knowledge base, and multi-agent workstation.</p>
             <form id="loginForm" onsubmit="handleLoginSubmit(event)">
                 <div class="form-group">
-                    <label for="loginUsername">用户名</label>
+                    <label for="loginUsername" data-i18n="login_username">Username</label>
                     <input type="text" id="loginUsername" autocomplete="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">密码</label>
+                    <label for="loginPassword" data-i18n="login_password">Password</label>
                     <input type="password" id="loginPassword" autocomplete="current-password" required>
                 </div>
-                <button id="loginSubmitBtn" class="btn btn-primary" type="submit" style="width: 100%;">登录</button>
+                <button id="loginSubmitBtn" class="btn btn-primary" type="submit" style="width: 100%;" data-i18n="login_button">Login</button>
                 <div id="authError" class="alert alert-error auth-hidden" style="margin-top: 16px;"></div>
             </form>
         </div>
@@ -901,34 +924,41 @@
 
     <div id="appShell" class="container auth-hidden">
         <div class="header">
-            <h1>紫微星 ChineseDragon-法律生产力操作系统</h1>
+            <h1 data-i18n="header_title">Gaia International World Model Legal Intelligence System</h1>
             <div class="auth-userbar">
                 <div class="status-badge">
                     <div class="status-dot"></div>
-                    <span id="authUserLabel">已登录</span>
+                    <span id="authUserLabel" data-i18n="user_label">Logged In</span>
                 </div>
-                <button class="btn" type="button" onclick="logoutCurrentUser()">退出</button>
+                <button class="btn" type="button" onclick="logoutCurrentUser()" data-i18n="logout_button">Logout</button>
+                <div class="lang-switcher">
+                    <select id="langSelect" onchange="setLanguage(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 13px; cursor: pointer;">
+                        <option value="en">English</option>
+                        <option value="zh">中文</option>
+                        <option value="ru">Русский</option>
+                    </select>
+                </div>
             </div>
         </div>
 
         <div class="tabs">
             <button class="tab active" data-tab="multiagent" onclick="switchTab('multiagent')">法律多智能体系统</button>
-            <button class="tab" data-tab="knowledge" onclick="switchTab('knowledge')">知识库管理</button>
+            <button class="tab" data-tab="knowledge" onclick="switchTab('knowledge')" data-i18n="tab_knowledge">Knowledge Base</button>
         </div>
 
         <div class="content">
-            <!-- 智能对话标签页 -->
+            <!-- Smart Chat Tab -->
             <div id="chatTab" class="tab-content dev-only">
                 <div class="chat-area">
                     <div class="chat-controls">
                         <div class="control-group">
-                            <label>Agent 类型：</label>
+                            <label>Agent Type:</label>
                             <select id="agentType">
-                                <option value="simple">简单对话</option>
-                                <option value="tool">工具调用</option>
+                                <option value="simple">Simple Chat</option>
+                                <option value="tool">Tool Use</option>
                             </select>
                         </div>
-                        <button class="btn btn-danger" onclick="clearChatHistory()">清除历史</button>
+                        <button class="btn btn-danger" onclick="clearChatHistory()">Clear History</button>
                     </div>
 
                     <div class="chat-container scrollbar" id="chatContainer">
@@ -936,36 +966,36 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            <h3>开始对话</h3>
-                            <p>选择 Agent 类型，然后输入您的问题开始对话</p>
+                            <h3>Start Chat</h3>
+                            <p>Select an Agent type and enter your question to start chatting</p>
                         </div>
                     </div>
 
                     <div class="input-area">
                         <div class="input-container">
-                            <textarea id="userInput" placeholder="输入您的问题..." rows="1"></textarea>
-                            <button id="sendBtn" onclick="sendMessage()">发送</button>
+                            <textarea id="userInput" placeholder="Enter your question..." rows="1"></textarea>
+                            <button id="sendBtn" onclick="sendMessage()">Send</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- RAG 问答标签页 -->
+            <!-- RAG Q&A Tab -->
             <div id="ragTab" class="tab-content dev-only">
                 <div class="chat-area">
                     <div class="chat-controls">
                         <div class="control-group">
-                            <label>资料库：</label>
+                            <label>Knowledge Base:</label>
                             <select id="ragCollection" style="min-width: 200px;">
-                                <option value="">-- 请选择资料库 --</option>
+                                <option value="">-- Select Knowledge Base --</option>
                             </select>
                         </div>
                         <div class="control-group">
-                            <label>资料检索方式：</label>
+                            <label>Retrieval Method:</label>
                             <select id="retrievalMode">
-                                <option value="hybrid">混合检索</option>
-                                <option value="vector">向量检索</option>
-                                <option value="keyword">关键词检索</option>
+                                <option value="hybrid">Hybrid Search</option>
+                                <option value="vector">Vector Search</option>
+                                <option value="keyword">Keyword Search</option>
                             </select>
                         </div>
                         <div class="control-group">
@@ -974,13 +1004,13 @@
                         </div>
                         <div class="checkbox-group">
                             <input type="checkbox" id="optimizeQuery" checked>
-                            <label for="optimizeQuery">查询优化</label>
+                            <label for="optimizeQuery">Query Optimization</label>
                         </div>
                         <div class="checkbox-group">
                             <input type="checkbox" id="useHistory" checked>
-                            <label for="useHistory">使用历史</label>
+                            <label for="useHistory">Use History</label>
                         </div>
-                        <button class="btn btn-danger" onclick="clearRagHistory()">清除历史</button>
+                        <button class="btn btn-danger" onclick="clearRagHistory()">Clear History</button>
                     </div>
 
                     <div class="chat-container scrollbar" id="ragChatContainer">
@@ -988,148 +1018,148 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                             </svg>
-                            <h3>RAG 问答</h3>
-                            <p>基于资料库的智能问答，支持多种检索方式</p>
+                            <h3>RAG Q&A</h3>
+                            <p>Knowledge base powered Q&A with multiple retrieval methods</p>
                         </div>
                     </div>
 
                     <div class="input-area">
                         <div class="input-container">
-                            <textarea id="ragInput" placeholder="输入您的问题..." rows="1"></textarea>
-                            <button id="ragSendBtn" onclick="sendRagQuery()">发送</button>
+                            <textarea id="ragInput" placeholder="Enter your question..." rows="1"></textarea>
+                            <button id="ragSendBtn" onclick="sendRagQuery()">Send</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 知识库管理标签页 -->
+            <!-- Knowledge Base Management Tab -->
             <div id="knowledgeTab" class="tab-content">
                 <div class="rag-section scrollbar">
-                    <!-- 创建用户知识库 -->
+                    <!-- Create User Knowledge Base -->
                     <div class="rag-card">
-                        <h3>➕ 我的知识库</h3>
+                        <h3>➕ My Knowledge Base</h3>
                         <div class="form-group">
-                            <label>知识库名称：</label>
-                            <input type="text" id="createUserKbName" placeholder="例如：我的合同模板">
+                            <label>Knowledge Base Name:</label>
+                            <input type="text" id="createUserKbName" placeholder="e.g., My Contract Templates">
                         </div>
                         <div class="form-group">
-                            <label>说明：</label>
-                            <textarea id="createUserKbDescription" placeholder="可选，例如：个人常用合同模板和审查规则" style="min-height: 80px;"></textarea>
+                            <label>Description:</label>
+                            <textarea id="createUserKbDescription" placeholder="Optional, e.g., personal contract templates and review rules" style="min-height: 80px;"></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="createUserKnowledgeBase()" style="width: 100%;">创建我的知识库</button>
+                        <button class="btn btn-primary" onclick="createUserKnowledgeBase()" style="width: 100%;">Create My Knowledge Base</button>
                         <div id="createUserKbResult"></div>
                     </div>
 
-                    <!-- 管理员公共知识库 -->
+                    <!-- Admin Public Knowledge Base -->
                     <div id="publicKbAdminCard" class="rag-card auth-hidden" data-admin-only="true">
-                        <h3>🏛️ 公共知识库管理</h3>
+                        <h3>🏛️ Public Knowledge Base Management</h3>
                         <div class="form-group">
-                            <label>公共知识库名称：</label>
-                            <input type="text" id="createPublicKbName" placeholder="例如：法规案例库">
+                            <label>Public KB Name:</label>
+                            <input type="text" id="createPublicKbName" placeholder="e.g., Legal Case Library">
                         </div>
                         <div class="form-group">
-                            <label>说明：</label>
-                            <textarea id="createPublicKbDescription" placeholder="可选，例如：全员可检索的法规、案例和合规规则" style="min-height: 80px;"></textarea>
+                            <label>Description:</label>
+                            <textarea id="createPublicKbDescription" placeholder="Optional, e.g., publicly searchable laws, cases, and compliance rules" style="min-height: 80px;"></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="createPublicKnowledgeBase()" style="width: 100%;">创建公共知识库</button>
+                        <button class="btn btn-primary" onclick="createPublicKnowledgeBase()" style="width: 100%;">Create Public Knowledge Base</button>
                         <div id="createPublicKbResult"></div>
                     </div>
 
-                    <!-- 上传文本 -->
+                    <!-- Upload Text -->
                     <div class="rag-card">
-                        <h3>📝 上传法律资料文本</h3>
+                        <h3>📝 Upload Legal Material Text</h3>
                         <div class="form-group">
-                            <label>目标知识库：</label>
+                            <label>Target Knowledge Base:</label>
                             <select id="uploadKbSelect" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载或创建知识库 --</option>
+                                <option value="">-- Please load or create a knowledge base first --</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>法律资料内容（每行一条资料）：</label>
-                            <textarea id="textContent" placeholder="输入要加入资料库的法规条文、合同条款、案例摘要或企业制度..."></textarea>
+                            <label>Legal Material Content (one item per line):</label>
+                            <textarea id="textContent" placeholder="Enter legal provisions, contract clauses, case summaries, or enterprise policies to add to the knowledge base..."></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="uploadTexts()" style="width: 100%;">上传法律资料文本</button>
+                        <button class="btn btn-primary" onclick="uploadTexts()" style="width: 100%;">Upload Legal Material Text</button>
                         <div id="uploadTextResult"></div>
                     </div>
 
-                    <!-- 文件上传 -->
+                    <!-- File Upload -->
                     <div class="rag-card">
-                        <h3>📁 上传法律资料文件</h3>
+                        <h3>📁 Upload Legal Material File</h3>
                         <div class="form-group">
-                            <label>目标知识库：</label>
+                            <label>Target Knowledge Base:</label>
                             <select id="fileUploadKbSelect" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载或创建知识库 --</option>
+                                <option value="">-- Please load or create a knowledge base first --</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>选择法律资料文件：</label>
+                            <label>Select Legal Material File:</label>
                             <input type="file" id="ragUploadFile" accept=".pdf,.docx,.md,.markdown,.txt,.text">
                         </div>
-                        <button class="btn btn-primary" onclick="uploadFile()" style="width: 100%;">上传法律资料文件</button>
+                        <button class="btn btn-primary" onclick="uploadFile()" style="width: 100%;">Upload Legal Material File</button>
                         <div id="uploadFileResult"></div>
                     </div>
 
-                    <!-- 知识库信息 -->
+                    <!-- Knowledge Base Info -->
                     <div class="rag-card">
-                        <h3>ℹ️ 资料库状态</h3>
+                        <h3>ℹ️ Knowledge Base Status</h3>
                         <div class="form-group">
-                            <label>选择资料库：</label>
+                            <label>Select Knowledge Base:</label>
                             <select id="infoCollection" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载资料库列表 --</option>
+                                <option value="">-- Please load knowledge base list first --</option>
                             </select>
                         </div>
-                        <button class="btn btn-secondary" onclick="getKnowledgeInfo()" style="width: 100%; margin-bottom: 16px;">刷新状态</button>
+                        <button class="btn btn-secondary" onclick="getKnowledgeInfo()" style="width: 100%; margin-bottom: 16px;">Refresh Status</button>
                         <div id="knowledgeInfo">
-                            <div class="alert alert-info">点击“刷新状态”查看资料库状态</div>
+                            <div class="alert alert-info">Click "Refresh Status" to view knowledge base status</div>
                         </div>
                     </div>
 
-                    <!-- 所有知识库列表 -->
+                    <!-- All Knowledge Bases List -->
                     <div class="rag-card">
-                        <h3>📚 已有资料库</h3>
+                        <h3>📚 Existing Knowledge Bases</h3>
                         <p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">
-                            管理可供法律审查调用的法规、案例、合同模板和企业制度资料库。
+                            Manage the knowledge base of laws, cases, contract templates, and enterprise policies available for legal review。
                         </p>
-                        <button class="btn btn-secondary" onclick="loadAllCollections()" style="width: 100%; margin-bottom: 16px;">刷新资料库列表</button>
+                        <button class="btn btn-secondary" onclick="loadAllCollections()" style="width: 100%; margin-bottom: 16px;">Refresh Knowledge Base List</button>
                         <div id="collectionsList"></div>
                     </div>
 
-                    <!-- 上传审计 -->
+                    <!-- Upload Audit -->
                     <div class="rag-card">
-                        <h3>🧾 上传审计记录</h3>
-                        <button class="btn btn-secondary" onclick="loadUploadAudit()" style="width: 100%; margin-bottom: 16px;">查看上传审计</button>
+                        <h3>🧾 Upload Audit Records</h3>
+                        <button class="btn btn-secondary" onclick="loadUploadAudit()" style="width: 100%; margin-bottom: 16px;">View Upload Audit</button>
                         <div id="uploadAuditList"></div>
                     </div>
 
-                    <!-- 知识库管理 -->
+                    <!-- Knowledge Base Management -->
                     <div class="rag-card">
-                        <h3>🗑️ 危险操作</h3>
+                        <h3>🗑️ Dangerous Operations</h3>
                         <div class="form-group">
-                            <label>选择知识库：</label>
+                            <label>Select Knowledge Base:</label>
                             <select id="manageKbSelect" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请选择可管理知识库 --</option>
+                                <option value="">-- Select a manageable knowledge base --</option>
                             </select>
                         </div>
-                        <button class="btn btn-danger" onclick="clearKnowledgeBase()" style="width: 100%; margin-bottom: 12px;">清空资料库</button>
-                        <button class="btn btn-danger" onclick="deleteKnowledgeBaseCollection()" style="width: 100%; margin-bottom: 12px;">删除资料库</button>
+                        <button class="btn btn-danger" onclick="clearKnowledgeBase()" style="width: 100%; margin-bottom: 12px;">Clear Knowledge Base</button>
+                        <button class="btn btn-danger" onclick="deleteKnowledgeBaseCollection()" style="width: 100%; margin-bottom: 12px;">Delete Knowledge Base</button>
                         <div class="alert alert-info" style="margin: 0;">
-                            ⚠️ 清空资料库会删除库内资料但保留资料库；删除资料库会移除库本身并从列表中消失，操作不可恢复。
+                            ⚠️ Clearing a knowledge base deletes its documents but keeps the base; deleting a knowledge base removes it entirely from the list. These actions cannot be undone.
                         </div>
                     </div>
 
-                    <!-- 文档浏览器 -->
+                    <!-- Document Browser -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>📄 浏览资料库内容</h3>
+                        <h3>📄 Browse Knowledge Base Content</h3>
                         <div class="form-group">
-                            <label>查看资料库：</label>
+                            <label>View Knowledge Base:</label>
                             <select id="browserCollection" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载资料库列表 --</option>
+                                <option value="">-- Please load knowledge base list first --</option>
                             </select>
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                            <button class="btn btn-secondary" onclick="loadDocuments()" style="flex: 1;">加载资料列表</button>
-                            <button class="btn btn-secondary" onclick="refreshDocuments()">刷新</button>
-                            <button class="btn btn-danger" onclick="batchDeleteDocuments()" id="batchDeleteBtn" style="display: none;">删除选中资料</button>
+                            <button class="btn btn-secondary" onclick="loadDocuments()" style="flex: 1;">Load Document List</button>
+                            <button class="btn btn-secondary" onclick="refreshDocuments()">Refresh</button>
+                            <button class="btn btn-danger" onclick="batchDeleteDocuments()" id="batchDeleteBtn" style="display: none;"><span data-i18n="kb_delete_btn">Delete Selected</span></button>
                         </div>
                         <div id="docStats"></div>
                         <div id="docBrowser"></div>
@@ -1137,58 +1167,58 @@
                 </div>
             </div>
 
-            <!-- Routing Agent 标签页 -->
+            <!-- Routing Agent Tab -->
             <div id="routingTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
-                    <!-- 场景和策略选择 -->
+                    <!-- Scenario and Strategy Selection -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>🎯 Routing Agent - 智能路由</h3>
+                        <h3>🎯 Routing Agent - Smart Routing</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            根据任务类型智能选择最合适的处理器，实现精准、高效的任务分发
+                            Intelligently selects the most suitable processor based on task type for precise and efficient task distribution
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>选择场景：</label>
+                                <label>Select Scenario:</label>
                                 <select id="routingScenario" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;" onchange="loadRoutingRoutes()">
-                                    <option value="">-- 加载中 --</option>
+                                    <option value="">-- Loading --</option>
                                 </select>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>路由策略：</label>
+                                <label>Routing Strategy:</label>
                                 <select id="routingStrategy" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                    <option value="hybrid">🔄 混合路由（推荐）</option>
-                                    <option value="llm_based">🤖 LLM路由</option>
-                                    <option value="keyword">🔍 关键词路由</option>
-                                    <option value="rule_based">📏 规则路由</option>
+                                    <option value="hybrid">🔄 Hybrid Routing (Recommended)</option>
+                                    <option value="llm_based">🤖 LLM Routing</option>
+                                    <option value="keyword">🔍 Keyword Routing</option>
+                                    <option value="rule_based">📏 Rule-Based Routing</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- 场景信息 -->
+                        <!-- Scenario Info -->
                         <div id="routingScenarioInfo" style="display: none; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 12px; color: #495057;">场景信息</h4>
+                            <h4 style="margin-bottom: 12px; color: #495057;">Scenario Info</h4>
                             <div id="routingDescription" style="margin-bottom: 12px; color: #6c757d;"></div>
                             <div id="routingRoutesList" style="margin-bottom: 12px;"></div>
                         </div>
 
                         <!-- 策略说明 -->
                         <div id="routingStrategyInfo" style="background: #e7f5ff; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;">
-                            <strong>💡 策略说明：</strong> <span id="strategyDescription">混合路由结合规则、关键词和LLM的优势，平衡效率和准确性</span>
+                            <strong>💡 Strategy Description:</strong> <span id="strategyDescription">Hybrid routing combines the strengths of rules, keywords, and LLM, balancing efficiency and accuracy</span>
                         </div>
 
                         <div class="form-group">
-                            <label id="routingInputLabel">输入任务：</label>
-                            <textarea id="routingInput" placeholder="例如：帮我写一个Python排序函数" rows="6" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
+                            <label id="routingInputLabel">Enter Task:</label>
+                            <textarea id="routingInput" placeholder="e.g., Write a Python sorting function for me" rows="6" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
                         </div>
 
                         <div style="display: flex; gap: 10px;">
                             <button class="btn btn-primary" onclick="executeRouting()" id="routingExecuteBtn" style="flex: 1;">
-                                <span>🚀 执行路由</span>
+                                <span>🚀 Execute Route</span>
                             </button>
                             <button class="btn btn-secondary" onclick="clearRoutingResult()">
-                                🗑️ 清除结果
+                                🗑️ Clear Results
                             </button>
                         </div>
                     </div>
@@ -1215,7 +1245,7 @@
                                 </div>
                             </div>
                             <div style="margin-top: 12px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 6px;">
-                                <strong style="font-size: 13px; color: #495057;">💡 路由原因：</strong>
+                                <strong style="font-size: 13px; color: #495057;">💡 Routing Reason:</strong>
                                 <p id="routingReason" style="margin: 8px 0 0 0; font-size: 13px; color: #6c757d;"></p>
                             </div>
                         </div>
@@ -1240,7 +1270,7 @@
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px; margin-top: 16px;">
                             <button class="btn btn-secondary" onclick="copyRoutingResult()">
-                                📋 复制结果
+                                📋 Copy Results
                             </button>
                         </div>
                     </div>
@@ -1249,31 +1279,31 @@
                     <div class="rag-card" style="grid-column: 1 / -1;">
                         <h3>📋 可用路由</h3>
                         <p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">
-                            当前场景下的所有可用路由和说明
+                            All available routes and descriptions for the current scenario
                         </p>
                         <div id="availableRoutes"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Parallelization Agent 标签页 -->
+            <!-- Parallelization Agent Tab -->
             <div id="parallelizationTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
                     <!-- 场景选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>🚀 Parallelization Agent - 并行化智能体</h3>
+                        <h3>🚀 Parallelization Agent - Parallelization Agent</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            同时执行多个任务，通过并行处理提高效率、获得多角度视角，提升结果质量
+                            Execute multiple tasks simultaneously, improving efficiency through parallel processing, gaining multi-angle perspectives, and enhancing result quality
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>选择场景：</label>
+                                <label>Select Scenario:</label>
                                 <select id="parallelScenario" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;" onchange="updateParallelScenarioInfo()">
                                     <option value="">-- 请选择一个场景 --</option>
-                                    <option value="multi_perspective">🔍 多角度分析 - 从多个角度分析问题</option>
+                                    <option value="multi_perspective">🔍 Multi-angle analysis - analyze problems from multiple perspectives</option>
                                     <option value="translation">🌍 并行翻译 - 同时翻译成多种语言</option>
-                                    <option value="content_gen">📝 并行内容生成 - 同时生成文档各章节</option>
+                                    <option value="content_gen">📝 Parallel content generation - generate document sections simultaneously</option>
                                     <option value="code_review">👨‍💻 并行代码审查 - 多维度代码审查</option>
                                     <option value="research">🔬 并行研究 - 研究问题的多个方面</option>
                                     <option value="consensus">🤝 共识生成 - 多次生成寻找最佳答案</option>
@@ -1305,16 +1335,16 @@
                             </div>
                         </div>
 
-                        <!-- 场景信息 -->
+                        <!-- Scenario Info -->
                         <div id="parallelScenarioInfo" style="display: none; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 12px; color: #495057;">场景信息</h4>
+                            <h4 style="margin-bottom: 12px; color: #495057;">Scenario Info</h4>
                             <div id="parallelDescription" style="margin-bottom: 12px; color: #6c757d;"></div>
                             <div id="parallelHint" style="font-size: 13px; color: #6c757d; font-style: italic;"></div>
                         </div>
 
                         <div class="form-group">
                             <label id="parallelInputLabel">输入内容：</label>
-                            <textarea id="parallelInput" placeholder="请先选择一个场景..." rows="6" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
+                            <textarea id="parallelInput" placeholder="Please select a scenario first..." rows="6" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
                         </div>
 
                         <div style="display: flex; gap: 10px;">
@@ -1322,7 +1352,7 @@
                                 <span>🚀 执行并行任务</span>
                             </button>
                             <button class="btn btn-secondary" onclick="clearParallelResult()">
-                                🗑️ 清除结果
+                                🗑️ Clear Results
                             </button>
                         </div>
                     </div>
@@ -1362,7 +1392,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <h4 style="margin: 0; color: #495057;">📋 各任务详细结果</h4>
                                 <button class="btn btn-sm btn-secondary" onclick="toggleAllParallelTasks()" id="toggleAllTasksBtn">
-                                    展开全部
+                                    Expand All
                                 </button>
                             </div>
                             <div id="parallelTaskResults"></div>
@@ -1371,28 +1401,28 @@
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px; margin-top: 16px;">
                             <button class="btn btn-secondary" onclick="copyParallelResult()">
-                                📋 复制结果
+                                📋 Copy Results
                             </button>
                             <button class="btn btn-secondary" onclick="downloadParallelResult()">
-                                💾 下载结果
+                                💾 Download Results
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Prompt Chaining 标签页 -->
+            <!-- Prompt Chaining Tab -->
             <div id="promptingTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
                     <!-- 场景选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
                         <h3>🔗 Prompt Chaining - 提示链</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            将复杂任务分解为多个步骤，每个步骤专注于特定目标，前一步的输出作为下一步的输入，实现模块化、高质量的输出
+                            Decompose complex tasks into multiple steps, each focusing on a specific goal, with the output of the previous step serving as input for the next, achieving modular, high-quality output
                         </p>
                         
                         <div class="form-group">
-                            <label>选择场景：</label>
+                            <label>Select Scenario:</label>
                             <select id="chainType" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;" onchange="updateChainInfo()">
                                 <option value="">-- 请选择一个场景 --</option>
                                 <option value="document_gen">📄 文档生成 - 自动生成技术文档</option>
@@ -1405,7 +1435,7 @@
 
                         <!-- 场景信息展示 -->
                         <div id="chainInfo" style="display: none; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 12px; color: #495057;">场景信息</h4>
+                            <h4 style="margin-bottom: 12px; color: #495057;">Scenario Info</h4>
                             <div id="chainDescription" style="margin-bottom: 12px; color: #6c757d;"></div>
                             <div id="chainSteps" style="margin-bottom: 12px;"></div>
                             <div id="chainHint" style="font-size: 13px; color: #6c757d; font-style: italic;"></div>
@@ -1413,7 +1443,7 @@
 
                         <div class="form-group">
                             <label id="inputLabel">输入内容：</label>
-                            <textarea id="chainInput" placeholder="请先选择一个场景..." rows="8" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
+                            <textarea id="chainInput" placeholder="Please select a scenario first..." rows="8" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
                         </div>
 
                         <div style="display: flex; gap: 10px;">
@@ -1421,7 +1451,7 @@
                                 <span>▶️ 运行提示链</span>
                             </button>
                             <button class="btn btn-secondary" onclick="clearChainResult()">
-                                🗑️ 清除结果
+                                🗑️ Clear Results
                             </button>
                         </div>
                     </div>
@@ -1452,35 +1482,35 @@
 
                         <!-- 执行信息 -->
                         <div id="chainMetadata" style="margin-top: 16px; padding: 12px; background: #e7f5ff; border-radius: 8px; font-size: 13px; color: #495057;">
-                            <!-- 元数据将通过 JavaScript 填充 -->
+                            <!-- Metadata will be populated by JavaScript -->
                         </div>
 
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px; margin-top: 16px;">
                             <button class="btn btn-secondary" onclick="copyChainResult()">
-                                📋 复制结果
+                                📋 Copy Results
                             </button>
                             <button class="btn btn-secondary" onclick="downloadChainResult()">
-                                💾 下载结果
+                                💾 Download Results
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Reflection Agent 标签页 -->
+            <!-- Reflection Agent Tab -->
             <div id="reflectionTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
                     <!-- 场景选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
                         <h3>💭 Reflection Agent - 反思智能体</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            通过自我批判和迭代改进来提升输出质量。系统先生成初始响应，然后进行反思，基于反思进行改进，可进行多轮迭代直到达到质量要求。
+                            Improve output quality through self-critique and iterative refinement. The system generates an initial response, then reflects on it, improves based on reflection, and can iterate multiple rounds until quality requirements are met。
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>选择场景：</label>
+                                <label>Select Scenario:</label>
                                 <select id="reflectionScenario" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;" onchange="updateReflectionScenarioInfo()">
                                     <option value="">-- 请选择一个场景 --</option>
                                     <option value="content">📝 内容创作 - 文章、博客、报告</option>
@@ -1501,25 +1531,25 @@
                             </div>
                         </div>
 
-                        <!-- 场景信息 -->
+                        <!-- Scenario Info -->
                         <div id="reflectionScenarioInfo" style="display: none; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 12px; color: #495057;">场景信息</h4>
+                            <h4 style="margin-bottom: 12px; color: #495057;">Scenario Info</h4>
                             <div id="reflectionDescription" style="margin-bottom: 12px; color: #6c757d;"></div>
                             <div id="reflectionCriteria" style="margin-bottom: 12px;"></div>
                             <div id="reflectionHint" style="font-size: 13px; color: #6c757d; font-style: italic;"></div>
                         </div>
 
-                        <!-- 专家设置（仅在expert策略时显示） -->
+                        <!-- Expert Settings (only shown for expert strategy) -->
                         <div id="expertSettings" style="display: none; background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
                             <h4 style="margin-bottom: 12px; color: #856404;">👨‍🔬 专家设置</h4>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label style="color: #856404;">专家角色：</label>
-                                    <input type="text" id="expertRole" placeholder="例如：资深Python开发工程师" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px;">
+                                    <input type="text" id="expertRole" placeholder="e.g., Senior Python Developer" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px;">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label style="color: #856404;">专业领域：</label>
-                                    <input type="text" id="expertExpertise" placeholder="例如：10年Python和架构设计经验" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px;">
+                                    <input type="text" id="expertExpertise" placeholder="e.g., 10 years of Python and architecture design experience" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 14px;">
                                 </div>
                             </div>
                         </div>
@@ -1542,8 +1572,8 @@
 
                         <div class="form-group">
                             <label id="reflectionInputLabel">任务描述或初始内容：</label>
-                            <textarea id="reflectionInput" placeholder="请先选择一个场景..." rows="8" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
-                            <p style="margin-top: 8px; font-size: 12px; color: #6c757d;">💡 提示：如果输入的是任务描述，系统会先生成初始内容再进行反思；如果输入的是已有内容，系统会直接对其进行反思和改进。</p>
+                            <textarea id="reflectionInput" placeholder="Please select a scenario first..." rows="8" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
+                            <p style="margin-top: 8px; font-size: 12px; color: #6c757d;">💡 Tip: If the input is a task description, the system will first generate initial content then reflect; if the input is existing content, the system will directly reflect and improve it。</p>
                         </div>
 
                         <div style="display: flex; gap: 10px;">
@@ -1551,7 +1581,7 @@
                                 <span>💭 开始反思与改进</span>
                             </button>
                             <button class="btn btn-secondary" onclick="clearReflectionResult()">
-                                🗑️ 清除结果
+                                🗑️ Clear Results
                             </button>
                         </div>
                     </div>
@@ -1623,27 +1653,27 @@
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px;">
                             <button class="btn btn-secondary" onclick="copyReflectionResult()">
-                                📋 复制结果
+                                📋 Copy Results
                             </button>
                             <button class="btn btn-secondary" onclick="downloadReflectionResult()">
-                                💾 下载结果
+                                💾 Download Results
                             </button>
                             <button class="btn btn-secondary" onclick="showReflectionHistory()">
-                                📜 查看完整历史
+                                📜 View Full History
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tool Use Agent 标签页 -->
+            <!-- Tool Use Agent Tab -->
             <div id="tooluseTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
                     <!-- 场景选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>🔧 Tool Use Agent - 工具使用智能体</h3>
+                        <h3>🔧 Tool Use Agent - Tool Use Agent</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            智能选择和执行工具来完成复杂任务。系统会分析用户需求，自动选择最合适的工具，并支持多工具协作完成复杂任务。
+                            Intelligently select and execute tools to complete complex tasks. The system analyzes user needs, automatically selects the most suitable tools, and supports multi-tool collaboration for complex tasks。
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
@@ -1682,8 +1712,8 @@
                         <div style="background: #e7f3ff; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #007bff;">
                             <h4 style="margin-bottom: 12px; color: #004085;">🚀 快速场景</h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
-                                <button class="btn btn-outline" onclick="setQuickTask('读取config.json文件内容')" style="text-align: left; font-size: 13px;">
-                                    📁 读取配置文件
+                                <button class="btn btn-outline" onclick="setQuickTask('Read config.json file content')" style="text-align: left; font-size: 13px;">
+                                    📁 Read Config File
                                 </button>
                                 <button class="btn btn-outline" onclick="setQuickTask('获取https://api.github.com的状态')" style="text-align: left; font-size: 13px;">
                                     🌐 检查API状态
@@ -1708,7 +1738,7 @@
                             <label>任务描述：</label>
                             <textarea 
                                 id="toolUseInput" 
-                                placeholder="请描述您需要完成的任务，例如：&#10;- 读取某个文件的内容&#10;- 获取某个网站的状态&#10;- 计算一些数据的统计信息&#10;- 分析文本内容&#10;- 转换单位或格式&#10;&#10;系统会自动选择合适的工具来完成您的任务。"
+                                placeholder="请描述您需要完成的任务，例如：&#10;- 读取某个文件的内容&#10;- 获取某个网站的状态&#10;- 计算一些数据的统计信息&#10;- 分析文本内容&#10;- 转换单位或格式&#10;&#10;The system will automatically select the appropriate tools to complete your task。"
                                 style="width: 100%; height: 120px; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; resize: vertical;"
                             ></textarea>
                         </div>
@@ -1781,10 +1811,10 @@
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px;">
                             <button class="btn btn-secondary" onclick="copyToolUseResult()">
-                                📋 复制结果
+                                📋 Copy Results
                             </button>
                             <button class="btn btn-secondary" onclick="downloadToolUseResult()">
-                                💾 下载结果
+                                💾 Download Results
                             </button>
                             <button class="btn btn-secondary" onclick="showToolUseHistory()">
                                 📜 查看详细历史
@@ -1800,14 +1830,14 @@
                 </div>
             </div>
 
-            <!-- Planning Agent 标签页 -->
+            <!-- Planning Agent Tab -->
             <div id="planningTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
                     <!-- 场景选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
                         <h3>📋 Planning Agent - 规划智能体</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            智能分析目标并制定详细的执行计划。系统会将复杂目标分解为可执行的子任务，制定合理的执行顺序，并支持动态调整和进度监控。
+                            Intelligently analyze goals and create detailed execution plans. The system decomposes complex goals into executable subtasks, establishes reasonable execution order, and supports dynamic adjustment and progress monitoring。
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
@@ -1833,9 +1863,9 @@
                             </div>
                         </div>
 
-                        <!-- 场景信息 -->
+                        <!-- Scenario Info -->
                         <div id="planningScenarioInfo" style="display: none; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 12px; color: #495057;">场景信息</h4>
+                            <h4 style="margin-bottom: 12px; color: #495057;">Scenario Info</h4>
                             <div id="planningScenarioDescription" style="margin-bottom: 12px; color: #6c757d;"></div>
                             <div id="planningScenarioFeatures" style="margin-bottom: 12px;"></div>
                         </div>
@@ -1870,7 +1900,7 @@
                             <label>目标描述：</label>
                             <textarea 
                                 id="planningGoal" 
-                                placeholder="请描述您的目标，例如：&#10;- 开发一个电商网站&#10;- 研究某个技术领域&#10;- 学习新的技能&#10;- 推出新产品&#10;- 组织活动或项目&#10;&#10;系统会自动分析目标并制定详细的执行计划。"
+                                placeholder="请描述您的目标，例如：&#10;- 开发一个电商网站&#10;- 研究某个技术领域&#10;- 学习新的技能&#10;- 推出新产品&#10;- 组织活动或项目&#10;&#10;The system will automatically analyze the goal and create a detailed execution plan。"
                                 style="width: 100%; height: 120px; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; resize: vertical;"
                             ></textarea>
                         </div>
@@ -2038,10 +2068,10 @@
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px;">
                             <button class="btn btn-secondary" onclick="copyPlanningResult()">
-                                📋 复制结果
+                                📋 Copy Results
                             </button>
                             <button class="btn btn-secondary" onclick="downloadPlanningResult()">
-                                💾 下载结果
+                                💾 Download Results
                             </button>
                             <button class="btn btn-secondary" onclick="showPlanningLog()">
                                 📜 查看详细日志
@@ -2063,14 +2093,14 @@
                 </div>
             </div>
 
-            <!-- Multi-Agent Collaboration 标签页 -->
+            <!-- Multi-Agent Collaboration Tab -->
             <div id="multiagentTab" class="tab-content active">
                 <div class="rag-section scrollbar">
                     <!-- 团队选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
                         <h3>法律多智能体系统</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            选择法律任务，上传合同或材料，由法律多智能体团队完成审查、检索、合规分析和修改建议。
+                            Select a legal task, upload contracts or materials, and the legal multi-agent team will complete review, research, compliance analysis, and revision suggestions。
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
@@ -2100,7 +2130,7 @@
                                     <option value="">不使用资料库</option>
                                 </select>
                                 <div style="margin-top: 8px; color: #4338ca; font-size: 13px;">
-                                    选择资料库后，法律依据检索员和合规审查专员会自动检索相关资料。
+                                    After selecting a knowledge base, the Legal Researcher and Compliance Checker will automatically search relevant materials。
                                 </div>
                             </div>
                             <label class="checkbox-group" style="margin-bottom: 12px; color: #4338ca; font-size: 13px;">
@@ -2162,16 +2192,16 @@
                                 />
                             </div>
                             <button class="btn btn-secondary" onclick="parseLegalContractFile()" id="legalFileParseBtn" type="button">
-                                上传并解析合同文件
+                                上传并<span data-i18n="parse_contract_btn">Parse Contract</span>文件
                             </button>
                             <details style="margin-top: 12px;">
-                                <summary style="cursor: pointer; color: #166534; font-size: 13px;">服务器路径解析</summary>
+                                <summary style="cursor: pointer; color: #166534; font-size: 13px;">Server Path Resolution</summary>
                                 <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
                                     <label>合同或法律材料文件路径：</label>
                                     <input
                                         type="text"
                                         id="legalFilePath"
-                                        placeholder="请输入服务器可访问的文件路径，例如：C:/Users/.../contract.pdf 或 /mnt/c/Users/.../contract.txt"
+                                        placeholder="Enter server-accessible file path, e.g., C:/Users/.../contract.pdf or /mnt/c/Users/.../contract.txt"
                                         style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;"
                                     />
                                 </div>
@@ -2197,10 +2227,10 @@
                                 <button class="btn btn-outline" onclick="setQuickCollaboration('设计并实现一个在线聊天应用', 'software_dev')" style="text-align: left; font-size: 13px;">
                                     💻 开发聊天应用
                                 </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('研究深度学习在自然语言处理中的应用', 'research')" style="text-align: left; font-size: 13px;">
+                                <button class="btn btn-outline" onclick="setQuickCollaboration('Research deep learning applications in natural language processing', 'research')" style="text-align: left; font-size: 13px;">
                                     🔬 NLP研究
                                 </button>
-                                <button class="btn btn-outline" onclick="setQuickCollaboration('撰写一篇关于人工智能未来发展的文章', 'content')" style="text-align: left; font-size: 13px;">
+                                <button class="btn btn-outline" onclick="setQuickCollaboration('Write an article about the future development of artificial intelligence', 'content')" style="text-align: left; font-size: 13px;">
                                     📝 AI文章创作
                                 </button>
                                 <button class="btn btn-outline" onclick="setQuickCollaboration('分析企业数字化转型策略', 'business')" style="text-align: left; font-size: 13px;">
@@ -2228,7 +2258,7 @@
                         <!-- 执行按钮 -->
                         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                             <button class="btn btn-primary" onclick="startCollaboration()" id="collaborationStartBtn">
-                                开始多智能体审查
+                                <span data-i18n="start_collaboration_btn">Start Multi-Agent Review</span>
                             </button>
                             <button class="btn btn-secondary" onclick="showTeamDetails()">
                                 查看法律专家团队
@@ -2287,7 +2317,7 @@
                         <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px;">
                             <div>
                                 <h4 style="margin-bottom: 4px; color: #495057;">各法律专家分析</h4>
-                                <div id="agentContributionsSummary" style="color: #6c757d; font-size: 13px;">默认折叠，展开后查看各专家的完整分析过程。</div>
+                                <div id="agentContributionsSummary" style="color: #6c757d; font-size: 13px;">Collapsed by default, expand to view complete analysis from each expert。</div>
                             </div>
                             <button class="btn btn-sm btn-outline" onclick="toggleCollaborationSection('agentContributionsList', 'agentContributionsToggle')" id="agentContributionsToggle" type="button">展开</button>
                         </div>
@@ -2299,7 +2329,7 @@
                         <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px;">
                             <div>
                                 <h4 style="margin-bottom: 4px; color: #495057;">多智能体协作过程</h4>
-                                <div id="messagesSummary" style="color: #6c757d; font-size: 13px;">默认折叠，展开后查看专家之间的任务分发和响应记录。</div>
+                                <div id="messagesSummary" style="color: #6c757d; font-size: 13px;">Collapsed by default, expand to view task distribution and response records between experts。</div>
                             </div>
                             <button class="btn btn-sm btn-outline" onclick="toggleCollaborationSection('messagesList', 'messagesToggle')" id="messagesToggle" type="button">展开</button>
                         </div>
@@ -2308,13 +2338,13 @@
                 </div>
             </div>
 
-            <!-- Memory Management Agent 内容 -->
+            <!-- Memory Management Agent Content -->
             <div id="memoryTab" class="tab-content dev-only">
                 <div class="rag-section scrollbar">
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>🧠 Memory Management Agent - 记忆管理</h3>
+                        <h3>🧠 Memory Management Agent - Memory Management</h3>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
-                            智能记忆管理系统 - 让AI拥有记忆能力，记住过去的对话、学习用户偏好、提供个性化服务
+                            Intelligent Memory Management System - Give AI memory capabilities to remember past conversations, learn user preferences, and provide personalized services
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 400px 1fr; gap: 20px;">
@@ -2350,7 +2380,7 @@
                                     
                                     <div style="margin-bottom: 10px;">
                                         <label style="font-size: 13px; color: #666; display: block; margin-bottom: 5px;">标签 (逗号分隔):</label>
-                                        <input type="text" id="memoryTags" placeholder="例如: 用户偏好, Python, 编程" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                                        <input type="text" id="memoryTags" placeholder="e.g., User preferences, Python, Programming" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
                                     </div>
                                     
                                     <button onclick="storeMemory()" class="btn btn-primary" style="width: 100%;">💾 存储记忆</button>
@@ -2393,7 +2423,7 @@
                                     <h4 style="margin-bottom: 15px; color: #667eea;">💬 基于记忆的对话</h4>
                                     <div id="memoryMessages" style="height: 300px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #f8f9fa;"></div>
                                     <div style="display: flex; gap: 10px;">
-                                        <textarea id="memoryChatInput" placeholder="输入消息... (AI会基于存储的记忆回答)" rows="2" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;"></textarea>
+                                        <textarea id="memoryChatInput" placeholder="Enter message... (AI will answer based on stored memories)" rows="2" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;"></textarea>
                                         <button onclick="sendMemoryChat()" class="btn btn-primary" style="height: auto;">发送</button>
                                     </div>
                                 </div>
@@ -2421,7 +2451,7 @@
                 <button class="modal-close" onclick="closeDocModal()">&times;</button>
             </div>
             <div class="modal-body" id="docModalBody">
-                <!-- 内容将通过 JavaScript 填充 -->
+                <!-- Content will be populated by JavaScript -->
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeDocModal()">关闭</button>
@@ -2431,6 +2461,516 @@
     </div>
 
     <script>
+        // ==================== i18n Internationalization ====================
+        const I18N = {
+            "page_title": {
+                        "en": "Gaia International World Model Legal Intelligence System",
+                        "zh": "盖亚国际世界模型法律智能体系统",
+                        "ru": "Международная система юридического интеллекта Gaia World Model"
+            },
+            "login_title": {
+                        "en": "Login to Gaia International World Model Legal Intelligence System",
+                        "zh": "Login to Gaia International World Model Legal Intelligence System",
+                        "ru": "Вход в Международную систему юридического интеллекта Gaia World Model"
+            },
+            "login_subtitle": {
+                        "en": "Please use your registered account to access the contract review, knowledge base, and multi-agent workstation.",
+                        "zh": "请使用已开通的账号进入合同审查、知识库和多智能体工作台。",
+                        "ru": "Пожалуйста, используйте зарегистрированную учетную запись для доступа к проверке контрактов, базе знаний и мультиагентной рабочей станции."
+            },
+            "login_username": {
+                        "en": "Username",
+                        "zh": "用户名",
+                        "ru": "Имя пользователя"
+            },
+            "login_password": {
+                        "en": "Password",
+                        "zh": "密码",
+                        "ru": "Пароль"
+            },
+            "login_button": {
+                        "en": "Login",
+                        "zh": "登录",
+                        "ru": "Войти"
+            },
+            "header_title": {
+                        "en": "Gaia International World Model Legal Intelligence System",
+                        "zh": "盖亚国际世界模型法律智能体系统",
+                        "ru": "Международная система юридического интеллекта Gaia World Model"
+            },
+            "user_label": {
+                        "en": "Logged In",
+                        "zh": "已登录",
+                        "ru": "В системе"
+            },
+            "logout_button": {
+                        "en": "Logout",
+                        "zh": "退出",
+                        "ru": "Выйти"
+            },
+            "tab_multiagent": {
+                        "en": "Multi-Agent System",
+                        "zh": "多智能体系统",
+                        "ru": "Мультиагентная система"
+            },
+            "tab_knowledge": {
+                        "en": "Knowledge Base",
+                        "zh": "知识库管理",
+                        "ru": "База знаний"
+            },
+            "lang_label": {
+                        "en": "Language",
+                        "zh": "语言",
+                        "ru": "Язык"
+            },
+            "team_label": {
+                        "en": "Team:",
+                        "zh": "团队：",
+                        "ru": "Команда:"
+            },
+            "mode_label": {
+                        "en": "Mode:",
+                        "zh": "模式：",
+                        "ru": "Режим:"
+            },
+            "legal_task_label": {
+                        "en": "Legal Task:",
+                        "zh": "法律任务：",
+                        "ru": "Юридическая задача:"
+            },
+            "kb_label": {
+                        "en": "Knowledge Base:",
+                        "zh": "知识库：",
+                        "ru": "База знаний:"
+            },
+            "include_public_kb": {
+                        "en": "Include Public KB",
+                        "zh": "包含公共知识库",
+                        "ru": "Вкл. публичную БЗ"
+            },
+            "contract_file_label": {
+                        "en": "Contract File:",
+                        "zh": "合同文件：",
+                        "ru": "Файл контракта:"
+            },
+            "or_label": {
+                        "en": "or",
+                        "zh": "或",
+                        "ru": "или"
+            },
+            "server_path_label": {
+                        "en": "Server Path:",
+                        "zh": "服务器路径：",
+                        "ru": "Путь на сервере:"
+            },
+            "parse_contract_btn": {
+                        "en": "Parse Contract",
+                        "zh": "解析合同",
+                        "ru": "Разобрать контракт"
+            },
+            "task_input_placeholder": {
+                        "en": "Enter your task description...",
+                        "zh": "请输入任务描述...",
+                        "ru": "Введите описание задачи..."
+            },
+            "start_collaboration_btn": {
+                        "en": "Start Multi-Agent Review",
+                        "zh": "开始多智能体审查",
+                        "ru": "Начать мультиагентную проверку"
+            },
+            "reviewing_text": {
+                        "en": "Reviewing...",
+                        "zh": "审查中...",
+                        "ru": "Проверка..."
+            },
+            "initializing_text": {
+                        "en": "Initializing legal multi-agent review...",
+                        "zh": "正在初始化法律多智能体审查...",
+                        "ru": "Инициализация мультиагентной юридической проверки..."
+            },
+            "kb_create_user_title": {
+                        "en": "Create User Knowledge Base",
+                        "zh": "创建用户知识库",
+                        "ru": "Создать пользовательскую БЗ"
+            },
+            "kb_create_public_title": {
+                        "en": "Admin: Create Public Knowledge Base",
+                        "zh": "管理员：创建公共知识库",
+                        "ru": "Админ: Создать публичную БЗ"
+            },
+            "kb_upload_text_title": {
+                        "en": "Upload Text",
+                        "zh": "上传文本",
+                        "ru": "Загрузить текст"
+            },
+            "kb_upload_file_title": {
+                        "en": "File Upload",
+                        "zh": "文件上传",
+                        "ru": "Загрузка файла"
+            },
+            "kb_info_title": {
+                        "en": "Knowledge Base Info",
+                        "zh": "知识库信息",
+                        "ru": "Информация о БЗ"
+            },
+            "kb_list_title": {
+                        "en": "All Knowledge Bases",
+                        "zh": "所有知识库列表",
+                        "ru": "Все базы знаний"
+            },
+            "kb_audit_title": {
+                        "en": "Upload Audit",
+                        "zh": "上传审计",
+                        "ru": "Аудит загрузок"
+            },
+            "kb_manage_title": {
+                        "en": "Knowledge Base Management",
+                        "zh": "知识库管理",
+                        "ru": "Управление БЗ"
+            },
+            "kb_doc_browser_title": {
+                        "en": "Document Browser",
+                        "zh": "文档浏览器",
+                        "ru": "Просмотр документов"
+            },
+            "kb_name_placeholder": {
+                        "en": "Knowledge Base Name",
+                        "zh": "知识库名称",
+                        "ru": "Название базы знаний"
+            },
+            "kb_desc_placeholder": {
+                        "en": "Description (optional)",
+                        "zh": "描述（可选）",
+                        "ru": "Описание (необязательно)"
+            },
+            "kb_create_btn": {
+                        "en": "Create",
+                        "zh": "创建",
+                        "ru": "Создать"
+            },
+            "kb_upload_btn": {
+                        "en": "Upload",
+                        "zh": "上传",
+                        "ru": "Загрузить"
+            },
+            "kb_select_placeholder": {
+                        "en": "Select Knowledge Base",
+                        "zh": "选择知识库",
+                        "ru": "Выберите базу знаний"
+            },
+            "kb_refresh_btn": {
+                        "en": "Refresh",
+                        "zh": "刷新",
+                        "ru": "Обновить"
+            },
+            "kb_delete_btn": {
+                        "en": "Delete Selected",
+                        "zh": "删除选中",
+                        "ru": "Удалить выбранное"
+            },
+            "quick_tasks_label": {
+                        "en": "Quick Tasks:",
+                        "zh": "快速任务：",
+                        "ru": "Быстрые задачи:"
+            },
+            "task_contract_review": {
+                        "en": "Contract Review",
+                        "zh": "合同审查",
+                        "ru": "Проверка контракта"
+            },
+            "task_risk_identification": {
+                        "en": "Risk Identification",
+                        "zh": "合同风险识别",
+                        "ru": "Выявление рисков"
+            },
+            "task_revision_suggestions": {
+                        "en": "Revision Suggestions",
+                        "zh": "修改建议与替代条款",
+                        "ru": "Предложения по изменению"
+            },
+            "task_legal_research": {
+                        "en": "Legal Research",
+                        "zh": "法律依据检索",
+                        "ru": "Юридический поиск"
+            },
+            "task_compliance_analysis": {
+                        "en": "Compliance Analysis",
+                        "zh": "合规风险分析",
+                        "ru": "Анализ соответствия"
+            },
+            "task_review_summary": {
+                        "en": "Review Summary",
+                        "zh": "审查结论摘要",
+                        "ru": "Резюме проверки"
+            },
+            "task_legal_document": {
+                        "en": "Legal Document Generation",
+                        "zh": "法律文书生成",
+                        "ru": "Создание документа"
+            },
+            "task_redline": {
+                        "en": "Redline Comparison",
+                        "zh": "红线比对",
+                        "ru": "Сравнение версий"
+            },
+            "task_approval_flow": {
+                        "en": "Approval Flow",
+                        "zh": "法务审批流建议",
+                        "ru": "Процесс утверждения"
+            },
+            "agent_contract_reviewer": {
+                        "en": "Contract Review Coordinator",
+                        "zh": "合同审查协调员",
+                        "ru": "Координатор проверки контрактов"
+            },
+            "agent_clause_risk_analyzer": {
+                        "en": "Clause Risk Analyst",
+                        "zh": "条款风险分析师",
+                        "ru": "Аналитик рисков положений"
+            },
+            "agent_legal_researcher": {
+                        "en": "Legal Researcher",
+                        "zh": "法律依据检索员",
+                        "ru": "Юридический исследователь"
+            },
+            "agent_drafting_specialist": {
+                        "en": "Legal Drafting Specialist",
+                        "zh": "法律文书起草专家",
+                        "ru": "Специалист по составлению документов"
+            },
+            "agent_compliance_checker": {
+                        "en": "Compliance Reviewer",
+                        "zh": "合规审查专员",
+                        "ru": "Специалист по соответствию"
+            },
+            "agent_audit_recorder": {
+                        "en": "Audit Recorder",
+                        "zh": "审计留痕记录员",
+                        "ru": "Аудитор"
+            },
+            "mode_sequential": {
+                        "en": "Sequential",
+                        "zh": "顺序协作",
+                        "ru": "Последовательный"
+            },
+            "mode_parallel": {
+                        "en": "Parallel",
+                        "zh": "并行协作",
+                        "ru": "Параллельный"
+            },
+            "mode_hierarchical": {
+                        "en": "Hierarchical",
+                        "zh": "层级协作",
+                        "ru": "Иерархический"
+            },
+            "mode_peer_to_peer": {
+                        "en": "Peer-to-Peer",
+                        "zh": "对等协作",
+                        "ru": "Одноранговый"
+            },
+            "mode_hybrid": {
+                        "en": "Hybrid",
+                        "zh": "混合模式",
+                        "ru": "Гибридный"
+            },
+            "loading_text": {
+                        "en": "Loading...",
+                        "zh": "加载中...",
+                        "ru": "Загрузка..."
+            },
+            "error_text": {
+                        "en": "Error",
+                        "zh": "错误",
+                        "ru": "Ошибка"
+            },
+            "success_text": {
+                        "en": "Success",
+                        "zh": "成功",
+                        "ru": "Успешно"
+            },
+            "confirm_text": {
+                        "en": "Confirm",
+                        "zh": "确认",
+                        "ru": "Подтвердить"
+            },
+            "cancel_text": {
+                        "en": "Cancel",
+                        "zh": "取消",
+                        "ru": "Отмена"
+            },
+            "close_text": {
+                        "en": "Close",
+                        "zh": "关闭",
+                        "ru": "Закрыть"
+            },
+            "export_btn": {
+                        "en": "Export Report",
+                        "zh": "导出报告",
+                        "ru": "Экспорт отчета"
+            },
+            "copy_btn": {
+                        "en": "Copy",
+                        "zh": "复制",
+                        "ru": "Копировать"
+            },
+            "download_btn": {
+                        "en": "Download",
+                        "zh": "下载",
+                        "ru": "Скачать"
+            },
+            "clear_btn": {
+                        "en": "Clear",
+                        "zh": "清除",
+                        "ru": "Очистить"
+            },
+            "alert_enter_task": {
+                        "en": "Please enter a task description",
+                        "zh": "请输入任务描述",
+                        "ru": "Пожалуйста, введите описание задачи"
+            },
+            "alert_select_team": {
+                        "en": "Please select a collaboration team",
+                        "zh": "请选择协作团队",
+                        "ru": "Пожалуйста, выберите команду"
+            },
+            "alert_policy_not_ready": {
+                        "en": "Legal agent policy is not yet loaded, please try again later",
+                        "zh": "Legal agent policy is not yet loaded, please try again later",
+                        "ru": "Политика юридических агентов еще не загружена, попробуйте позже"
+            },
+            "alert_collaboration_failed": {
+                        "en": "Collaboration failed: ",
+                        "zh": "协作失败: ",
+                        "ru": "Ошибка collaboration: "
+            },
+            "status_team_ready": {
+                        "en": "Legal expert team assembled, starting review...",
+                        "zh": "法律专家团队已组建，开始审查...",
+                        "ru": "Команда юридических экспертов собрана, начинаем проверку..."
+            },
+            "status_preparing": {
+                        "en": "Preparing legal multi-agent review...",
+                        "zh": "正在准备法律多智能体审查...",
+                        "ru": "Подготовка мультиагентной юридической проверки..."
+            },
+            "team_members_label": {
+                        "en": "Team Members:",
+                        "zh": "团队成员：",
+                        "ru": "Члены команды:"
+            },
+            "team_use_cases_label": {
+                        "en": "Use Cases:",
+                        "zh": "适用场景：",
+                        "ru": "Сценарии использования:"
+            },
+            "processing_mode_label": {
+                        "en": "Processing Mode:",
+                        "zh": "处理模式:",
+                        "ru": "Режим обработки:"
+            },
+            "actual_participants_label": {
+                        "en": "Actual Participants:",
+                        "zh": "实际参与:",
+                        "ru": "Фактические участники:"
+            },
+            "selection_source_label": {
+                        "en": "Selection Source:",
+                        "zh": "选择来源:",
+                        "ru": "Источник выбора:"
+            },
+            "legal_agent_selection_label": {
+                        "en": "Legal Agent Selection",
+                        "zh": "法律智能体选择",
+                        "ru": "Выбор юридических агентов"
+            },
+            "restore_defaults_btn": {
+                        "en": "Restore Defaults",
+                        "zh": "恢复默认",
+                        "ru": "Восстановить по умолчанию"
+            },
+            "doc_modal_title": {
+                        "en": "Document Details",
+                        "zh": "资料详情",
+                        "ru": "Детали документа"
+            },
+            "collab_result_title": {
+                        "en": "Review Results",
+                        "zh": "审查结果",
+                        "ru": "Результаты проверки"
+            },
+            "agent_contributions_title": {
+                        "en": "Agent Contributions",
+                        "zh": "Agent 贡献",
+                        "ru": "Вклад агентов"
+            },
+            "messages_title": {
+                        "en": "Message Records",
+                        "zh": "消息记录",
+                        "ru": "Записи сообщений"
+            },
+            "execution_stats_title": {
+                        "en": "Execution Statistics",
+                        "zh": "执行统计",
+                        "ru": "Статистика выполнения"
+            },
+            "expand_text": {
+                        "en": "Expand",
+                        "zh": "展开",
+                        "ru": "Развернуть"
+            },
+            "collapse_text": {
+                        "en": "Collapse",
+                        "zh": "折叠",
+                        "ru": "Свернуть"
+            },
+            "disclaimer_text": {
+                        "en": "This output does not constitute formal legal advice. Please consult a qualified lawyer for legal decisions.",
+                        "zh": "本输出不构成正式法律意见，法律决策请咨询合格律师。",
+                        "ru": "Данный вывод не является официальной юридической консультацией. Для принятия юридических решений обратитесь к квалифицированному юристу."
+            }
+};
+        
+        let currentLang = localStorage.getItem('gaia_lang') || 'en';
+        
+        function t(key) {
+            const entry = I18N[key];
+            if (!entry) return key;
+            return entry[currentLang] || entry['en'] || key;
+        }
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('gaia_lang', lang);
+            applyTranslations();
+        }
+        
+        function applyTranslations() {
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                const translated = t(key);
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.placeholder = translated;
+                } else if (el.tagName === 'OPTION') {
+                    el.textContent = translated;
+                } else {
+                    el.textContent = translated;
+                }
+            });
+            
+            // Update document title
+            document.title = t('page_title');
+            
+            // Update language selector
+            const langSelect = document.getElementById('langSelect');
+            if (langSelect) langSelect.value = currentLang;
+        }
+        
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTranslations();
+        });
+
         const API_BASE = window.location.origin;
         const rawFetch = window.fetch.bind(window);
         let isLoading = false;
@@ -2491,8 +3031,8 @@
         function updateAuthUserLabel() {
             const label = document.getElementById('authUserLabel');
             if (!label || !currentUser) return;
-            const displayName = currentUser.display_name || currentUser.username || '当前用户';
-            const roleLabel = currentUser.role === 'admin' ? '管理员' : '用户';
+            const displayName = currentUser.display_name || currentUser.username || 'Current User';
+            const roleLabel = currentUser.role === 'admin' ? 'Admin' : 'User';
             label.textContent = `${displayName}（${roleLabel}）`;
         }
 
@@ -2576,7 +3116,7 @@
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = '登录';
+                    submitBtn.textContent = 'Login';
                 }
             }
         }
@@ -2585,7 +3125,7 @@
             try {
                 await apiFetch(`${API_BASE}/api/auth/logout`, { method: 'POST' });
             } catch (error) {
-                console.error('注销失败:', error);
+                console.error('Logout failed:', error);
             } finally {
                 clearAuthSession();
                 showLoginScreen('已退出登录。');
@@ -2615,7 +3155,7 @@
                 showAppScreen();
                 await initializeAuthenticatedApp();
             } catch (error) {
-                console.error('检查登录态失败:', error);
+                console.error('Login check failed:', error);
                 clearAuthSession();
                 showLoginScreen();
             }
@@ -2649,13 +3189,13 @@
                 }
             } catch (error) {
                 appInitialized = false;
-                console.error('初始化应用失败:', error);
+                console.error('App initialization failed:', error);
             }
         }
 
         window.addEventListener('load', initializeAuthState);
 
-        // 配置 marked
+        // Configure marked
         if (typeof marked !== 'undefined') {
             marked.setOptions({
                 breaks: true,
@@ -2667,7 +3207,7 @@
         const CLIENT_ALLOWED_TABS = new Set(['multiagent', 'knowledge']);
         const CLIENT_DEFAULT_TAB = 'multiagent';
 
-        // 切换标签页
+        // Switch tabs
         function switchTab(tabName) {
             const targetTabName = CLIENT_MODE && !CLIENT_ALLOWED_TABS.has(tabName) ? CLIENT_DEFAULT_TAB : tabName;
             const targetContent = document.getElementById(targetTabName + 'Tab');
@@ -2849,7 +3389,7 @@
             } finally {
                 isLoading = false;
                 sendBtn.disabled = false;
-                sendBtn.textContent = '发送';
+                sendBtn.textContent = 'Send';
             }
         }
 
@@ -2866,7 +3406,7 @@
             
             // 检查是否选择了知识库
             if (!kbId) {
-                alert('请先选择一个资料库！');
+                alert('Please select a knowledge base first!');
                 return;
             }
             
@@ -2938,7 +3478,7 @@
             } finally {
                 isLoading = false;
                 sendBtn.disabled = false;
-                sendBtn.textContent = '发送';
+                sendBtn.textContent = 'Send';
             }
         }
 
@@ -2956,7 +3496,7 @@
             }
 
             try {
-                resultDiv.innerHTML = '<div class="alert alert-info">正在创建知识库...</div>';
+                resultDiv.innerHTML = '<div class="alert alert-info">Creating knowledge base...</div>';
                 const response = await fetch(`${API_BASE}/api/kb/collections`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2996,18 +3536,18 @@
             const resultDiv = document.getElementById('uploadTextResult');
 
             if (!content) {
-                resultDiv.innerHTML = '<div class="alert alert-error">请输入法律资料内容</div>';
+                resultDiv.innerHTML = '<div class="alert alert-error">Please enter legal material content</div>';
                 return;
             }
             if (!kbId) {
-                resultDiv.innerHTML = '<div class="alert alert-error">请先选择可写入的知识库</div>';
+                resultDiv.innerHTML = '<div class="alert alert-error">Please select a writable knowledge base first</div>';
                 return;
             }
 
             const texts = content.split('\n').filter(t => t.trim());
             
             try {
-                resultDiv.innerHTML = '<div class="alert alert-info">正在上传资料...</div>';
+                resultDiv.innerHTML = '<div class="alert alert-info">Uploading materials...</div>';
                 
                 const response = await fetch(`${API_BASE}/api/kb/collections/${encodeURIComponent(kbId)}/texts`, {
                     method: 'POST',
@@ -3052,16 +3592,16 @@
             const resultDiv = document.getElementById('uploadFileResult');
 
             if (!fileInput?.files?.length) {
-                resultDiv.innerHTML = '<div class="alert alert-error">请选择要上传的文件</div>';
+                resultDiv.innerHTML = '<div class="alert alert-error">Please select a file to upload</div>';
                 return;
             }
             if (!kbId) {
-                resultDiv.innerHTML = '<div class="alert alert-error">请先选择可写入的知识库</div>';
+                resultDiv.innerHTML = '<div class="alert alert-error">Please select a writable knowledge base first</div>';
                 return;
             }
 
             try {
-                resultDiv.innerHTML = '<div class="alert alert-info">正在上传资料...</div>';
+                resultDiv.innerHTML = '<div class="alert alert-info">Uploading materials...</div>';
 
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
@@ -3094,12 +3634,12 @@
             const infoDiv = document.getElementById('knowledgeInfo');
             
             if (!kbId) {
-                infoDiv.innerHTML = '<div class="alert alert-error">请先选择一个资料库</div>';
+                infoDiv.innerHTML = '<div class="alert alert-error">Please select a knowledge base first</div>';
                 return;
             }
 
             try {
-                infoDiv.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                infoDiv.innerHTML = '<div class="alert alert-info">Loading...</div>';
                 
                 const response = await fetch(`${API_BASE}/api/kb/collections/${encodeURIComponent(kbId)}`);
                 const data = await response.json();
@@ -3145,14 +3685,14 @@
             const mappingsDiv = document.getElementById('mappingsList');
             
             try {
-                mappingsDiv.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                mappingsDiv.innerHTML = '<div class="alert alert-info">Loading...</div>';
                 
                 const response = await fetch(`${API_BASE}/api/rag/mappings`);
                 const data = await response.json();
                 
                 if (response.ok) {
                     if (data.mappings.length === 0) {
-                        mappingsDiv.innerHTML = '<div class="alert alert-info">暂无名称对照记录</div>';
+                        mappingsDiv.innerHTML = '<div class="alert alert-info">No name mapping records</div>';
                         return;
                     }
                     
@@ -3201,7 +3741,7 @@
             const auditDiv = document.getElementById('uploadAuditList');
 
             try {
-                auditDiv.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                auditDiv.innerHTML = '<div class="alert alert-info">Loading...</div>';
 
                 const query = '?limit=50';
                 const response = await fetch(`${API_BASE}/api/uploads/audit${query}`);
@@ -3271,11 +3811,11 @@
             const kb = getKnowledgeBaseById(kbId);
             
             if (!kbId || !kb) {
-                alert('请先选择要清空的知识库');
+                alert('Please select a knowledge base to clear first');
                 return;
             }
 
-            if (!confirm(`确定要清空资料库“${kb.display_name}”吗？此操作不可恢复！`)) {
+            if (!confirm(`Are you sure you want to clear knowledge base “${kb.display_name}”? This action cannot be undone!`)) {
                 return;
             }
 
@@ -3287,13 +3827,13 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    alert('✓ 资料库已清空');
+                    alert('Knowledge base cleared');
                     getKnowledgeInfo();
                 } else {
-                    alert(`✗ 清空失败: ${data.detail}`);
+                    alert(`Clear failed: ${data.detail}`);
                 }
             } catch (error) {
-                alert(`✗ 清空失败: ${error.message}`);
+                alert(`Clear failed: ${error.message}`);
             }
         }
 
@@ -3303,12 +3843,12 @@
             const kb = getKnowledgeBaseById(kbId);
 
             if (!kbId || !kb) {
-                alert('请先选择要删除的知识库');
+                alert('Please select a knowledge base to delete first');
                 return;
             }
 
             const firstConfirm = confirm(
-                `确定要删除资料库“${kb.display_name}”吗？\n\n此操作会移除资料库本身，并从资料库列表中消失；已关联该资料库的多智能体审查需要重新选择资料库。`
+                `Are you sure you want to delete knowledge base “${kb.display_name}”?\n\nThis will remove the knowledge base itself from the list; multi-agent reviews linked to this knowledge base will need to reselect。`
             );
             if (!firstConfirm) {
                 return;
@@ -3316,7 +3856,7 @@
 
             const typedName = prompt(`请再次输入资料库名称以确认删除：${kb.display_name}`);
             if (typedName !== kb.display_name) {
-                alert('资料库名称不一致，已取消删除');
+                alert('Knowledge base name mismatch, deletion cancelled');
                 return;
             }
 
@@ -3328,17 +3868,17 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert(`✓ 资料库已删除：${kb.display_name}`);
+                    alert(`Knowledge base deleted: ${kb.display_name}`);
                     resetDeletedKnowledgeBaseSelections(kbId);
                     document.getElementById('knowledgeInfo').innerHTML = '<div class="alert alert-info">资料库已删除，请重新选择资料库查看状态</div>';
                     document.getElementById('docStats').innerHTML = '';
-                    document.getElementById('docBrowser').innerHTML = '<div class="alert alert-info">资料库已删除，请重新加载资料库列表</div>';
+                    document.getElementById('docBrowser').innerHTML = '<div class="alert alert-info">Knowledge base deleted, please reload the list</div>';
                     await loadAllCollections();
                 } else {
-                    alert(`✗ 删除失败: ${data.detail}`);
+                    alert(`Delete failed: ${data.detail}`);
                 }
             } catch (error) {
-                alert(`✗ 删除失败: ${error.message}`);
+                alert(`Delete failed: ${error.message}`);
             }
         }
 
@@ -3364,7 +3904,7 @@
 
         // 清除对话历史
         async function clearChatHistory() {
-            if (!confirm('确定要清除对话历史吗？')) return;
+            if (!confirm('Are you sure you want to clear chat history?')) return;
 
             try {
                 await fetch(`${API_BASE}/api/history/default`, { method: 'DELETE' });
@@ -3374,24 +3914,24 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        <h3>开始对话</h3>
-                        <p>选择 Agent 类型，然后输入您的问题开始对话</p>
+                        <h3>Start Chat</h3>
+                        <p>Select an Agent type and enter your question to start chatting</p>
                     </div>
                 `;
             } catch (error) {
-                alert('清除失败: ' + error.message);
+                alert('Clear failed: ' + error.message);
             }
         }
 
         // 清除 RAG 历史
         async function clearRagHistory() {
-            if (!confirm('确定要清除 RAG 对话历史吗？')) return;
+            if (!confirm('Are you sure you want to clear RAG chat history?')) return;
 
             const select = document.getElementById('ragCollection');
             const collection = select.value;
             
             if (!collection) {
-                alert('请先选择一个资料库！');
+                alert('Please select a knowledge base first!');
                 return;
             }
             
@@ -3403,12 +3943,12 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
-                        <h3>RAG 问答</h3>
-                        <p>基于资料库的智能问答，支持多种检索方式</p>
+                        <h3>RAG Q&A</h3>
+                        <p>Knowledge base powered Q&A with multiple retrieval methods</p>
                     </div>
                 `;
             } catch (error) {
-                alert('清除失败: ' + error.message);
+                alert('Clear failed: ' + error.message);
             }
         }
 
@@ -3444,7 +3984,7 @@
                 }
             });
 
-            console.log(`已同步知识库选择: ${kbId}`);
+            console.log(`Knowledge base selection synced: ${kbId}`);
         }
 
         // 文档浏览器功能
@@ -3460,12 +4000,12 @@
             const statsDiv = document.getElementById('docStats');
             
             if (!kbId) {
-                browserDiv.innerHTML = '<div class="alert alert-error">请先选择一个资料库</div>';
+                browserDiv.innerHTML = '<div class="alert alert-error">Please select a knowledge base first</div>';
                 return;
             }
 
             try {
-                browserDiv.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                browserDiv.innerHTML = '<div class="alert alert-info">Loading...</div>';
                 statsDiv.innerHTML = '';
 
                 const response = await fetch(`${API_BASE}/api/kb/collections/${encodeURIComponent(kbId)}/documents?limit=${limit}`);
@@ -3495,7 +4035,7 @@
                 `;
 
                 if (data.documents.length === 0) {
-                    browserDiv.innerHTML = '<div class="alert alert-info">该资料库暂无资料</div>';
+                    browserDiv.innerHTML = '<div class="alert alert-info">This knowledge base has no documents</div>';
                     return;
                 }
 
@@ -3543,7 +4083,7 @@
             const modalBody = document.getElementById('docModalBody');
 
             try {
-                modalBody.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                modalBody.innerHTML = '<div class="alert alert-info">Loading...</div>';
                 modal.classList.add('active');
 
                 const response = await fetch(`${API_BASE}/api/kb/collections/${encodeURIComponent(kbId)}/documents/${encodeURIComponent(docId)}`);
@@ -3590,7 +4130,7 @@
         async function deleteCurrentDoc() {
             if (!currentDocId || !currentCollection) return;
 
-            if (!confirm('确定要删除这条资料吗？此操作不可恢复！')) {
+            if (!confirm('Are you sure you want to delete this document? This action cannot be undone!')) {
                 return;
             }
 
@@ -3604,23 +4144,23 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('✓ 资料已删除');
+                    alert('Document deleted');
                     closeDocModal();
                     // 刷新文档列表
                     if (document.getElementById('browserCollection').value === kbId) {
                         loadDocuments();
                     }
                 } else {
-                    alert(`✗ 删除失败: ${data.detail}`);
+                    alert(`Delete failed: ${data.detail}`);
                 }
             } catch (error) {
-                alert(`✗ 删除失败: ${error.message}`);
+                alert(`Delete failed: ${error.message}`);
             }
         }
 
         // 直接删除资料（从列表）
         async function deleteDocumentById(kbId, docId) {
-            if (!confirm('确定要删除这条资料吗？此操作不可恢复！')) {
+            if (!confirm('Are you sure you want to delete this document? This action cannot be undone!')) {
                 return;
             }
 
@@ -3632,14 +4172,14 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('✓ 资料已删除');
+                    alert('Document deleted');
                     // 刷新文档列表
                     loadDocuments();
                 } else {
-                    alert(`✗ 删除失败: ${data.detail}`);
+                    alert(`Delete failed: ${data.detail}`);
                 }
             } catch (error) {
-                alert(`✗ 删除失败: ${error.message}`);
+                alert(`Delete failed: ${error.message}`);
             }
         }
 
@@ -3730,8 +4270,8 @@
                     共 ${collections.length} 个可见知识库
                 </div>
                 ${renderGroup('公共知识库', publicCollections, '暂无公共知识库', true)}
-                ${renderGroup('我的知识库', myCollections, '暂无我的知识库，请先创建或联系管理员')}
-                ${isAdminUser() ? '<div class="alert alert-info">公共知识库管理：管理员可创建、上传、清空或删除公共知识库。</div>' : ''}
+                ${renderGroup('我的知识库', myCollections, 'No personal knowledge bases, please create one or contact admin')}
+                ${isAdminUser() ? '<div class="alert alert-info">Public Knowledge Base Management: Admins can create, upload, clear, or delete public knowledge bases。</div>' : ''}
             `;
         }
 
@@ -3740,15 +4280,15 @@
             const listDiv = document.getElementById('collectionsList');
             
             try {
-                console.log('[loadAllCollections] 开始加载...');
+                console.log('[loadAllCollections] Loading...');
                 console.log('[loadAllCollections] listDiv:', listDiv);
                 
-                listDiv.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                listDiv.innerHTML = '<div class="alert alert-info">Loading...</div>';
                 
-                console.log('[loadAllCollections] 正在获取collections列表...');
+                console.log('[loadAllCollections] Fetching collections...');
                 const response = await fetch(`${API_BASE}/api/kb/collections`);
                 
-                console.log('响应状态:', response.status);
+                console.log('Response status:', response.status);
                 
                 // 先解析JSON
                 let data;
@@ -3759,23 +4299,23 @@
                 }
                 
                 if (response.ok) {
-                    console.log('成功获取collections:', data);
+                    console.log('Collections fetched:', data);
                     
                     knowledgeBases = data.collections || [];
                     if (knowledgeBases.length === 0) {
-                        listDiv.innerHTML = '<div class="alert alert-info">暂无资料库，请先上传法律资料</div>';
+                        listDiv.innerHTML = '<div class="alert alert-info">No knowledge bases found, please upload legal materials first</div>';
                         updateKnowledgeBaseSelects([]);
                         return;
                     }
                     renderKnowledgeBaseGroups(knowledgeBases);
                     updateKnowledgeBaseSelects(knowledgeBases);
                 } else {
-                    console.error('获取collections失败:', data);
+                    console.error('Failed to fetch collections:', data);
                     const errorMsg = data.detail || data.message || '未知错误';
                     listDiv.innerHTML = `<div class="alert alert-error">✗ ${errorMsg}<br><small>状态码: ${response.status}</small></div>`;
                 }
             } catch (error) {
-                console.error('加载collections异常:', error);
+                console.error('Collections load error:', error);
                 listDiv.innerHTML = `<div class="alert alert-error">✗ ${error.message}<br><small>请检查服务器是否正常运行</small></div>`;
             }
         }
@@ -3811,17 +4351,17 @@
                     collections,
                     selectId === 'multiAgentKnowledgeBase'
                         ? '<option value="">不指定单个知识库</option>'
-                        : '<option value="">-- 请选择资料库 --</option>'
+                        : '<option value="">-- Select Knowledge Base --</option>'
                 );
             });
             writableSelectIds.forEach(selectId => {
                 fillSelect(selectId, collections.filter(canWriteKnowledgeBase), '<option value="">-- 请选择可写入知识库 --</option>');
             });
             manageableSelectIds.forEach(selectId => {
-                fillSelect(selectId, collections.filter(canManageKnowledgeBase), '<option value="">-- 请选择可管理知识库 --</option>');
+                fillSelect(selectId, collections.filter(canManageKnowledgeBase), '<option value="">-- Select a manageable knowledge base --</option>');
             });
 
-            console.log(`已更新知识库下拉选择框，数量: ${collections.length}`);
+            console.log(`Knowledge base dropdown updated, count: ${collections.length}`);
         }
 
         // 选择知识库并同步到所有相关下拉框
@@ -3829,7 +4369,7 @@
             syncKnowledgeBaseSelection(kbId);
             const kb = getKnowledgeBaseById(kbId);
             if (kb) {
-                alert(`已选择知识库: ${kb.display_name}`);
+                alert(`Knowledge base selected: ${kb.display_name}`);
             }
         }
 
@@ -3848,7 +4388,7 @@
             const btn = document.getElementById('batchDeleteBtn');
             if (selectedDocIds.size > 0) {
                 btn.style.display = 'inline-block';
-                btn.textContent = `删除选中资料 (${selectedDocIds.size})`;
+                btn.textContent = `<span data-i18n="kb_delete_btn">Delete Selected</span> (${selectedDocIds.size})`;
             } else {
                 btn.style.display = 'none';
             }
@@ -3857,17 +4397,17 @@
         // 批量删除资料
         async function batchDeleteDocuments() {
             if (selectedDocIds.size === 0) {
-                alert('请先选择要删除的资料');
+                alert('Please select documents to delete first');
                 return;
             }
 
             const kbId = document.getElementById('browserCollection').value;
             if (!kbId) {
-                alert('请先选择要管理的知识库');
+                alert('Please select a knowledge base to manage first');
                 return;
             }
             
-            if (!confirm(`确定要删除选中的 ${selectedDocIds.size} 条资料吗？此操作不可恢复！`)) {
+            if (!confirm(`Are you sure you want to delete ${selectedDocIds.size} documents? This action cannot be undone!`)) {
                 return;
             }
 
@@ -3883,14 +4423,14 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert(`✓ 批量删除完成\n成功: ${data.success_count}\n失败: ${data.failed_count}\n剩余资料: ${data.remaining_count}`);
+                    alert(`✓ Batch delete complete\nSuccess: ${data.success_count}\nFailed: ${data.failed_count}\nRemaining: ${data.remaining_count}`);
                     // 刷新文档列表
                     loadDocuments();
                 } else {
-                    alert(`✗ 批量删除失败: ${data.detail}`);
+                    alert(`✗ Batch delete failed: ${data.detail}`);
                 }
             } catch (error) {
-                alert(`✗ 批量删除失败: ${error.message}`);
+                alert(`Batch delete failed: ${error.message}`);
             }
         }
 
@@ -3908,9 +4448,9 @@
                 data.chain_types.forEach(type => {
                     chainTypes[type.id] = type;
                 });
-                console.log('已加载提示链类型:', chainTypes);
+                console.log('Prompt chain types loaded:', chainTypes);
             } catch (error) {
-                console.error('加载提示链类型失败:', error);
+                console.error('Failed to load prompt chain types:', error);
             }
         }
 
@@ -3963,12 +4503,12 @@
             const stepsDetailsDiv = document.getElementById('chainStepsDetails');
             
             if (!chainType) {
-                alert('请先选择一个场景');
+                alert('Please select a scenario first');
                 return;
             }
             
             if (!inputText) {
-                alert('请输入内容');
+                alert('Please enter content');
                 return;
             }
             
@@ -3981,7 +4521,7 @@
             
             // 禁用按钮
             runBtn.disabled = true;
-            runBtn.innerHTML = '<span>⏳ 执行中...</span>';
+            runBtn.innerHTML = '<span>⏳ Executing...</span>';
             
             const typeInfo = chainTypes[chainType];
             const totalSteps = typeInfo.steps.length;
@@ -4032,14 +4572,14 @@
                             
                             if (data.type === 'info') {
                                 // 初始化信息
-                                document.getElementById('currentStep').textContent = '准备执行...';
+                                document.getElementById('currentStep').textContent = 'Preparing...';
                                 document.getElementById('stepCounter').textContent = `0 / ${data.total_steps}`;
                             } else if (data.type === 'step_start') {
                                 // 步骤开始
                                 currentStepNum = data.step;
                                 currentStepContent = '';
                                 
-                                document.getElementById('currentStep').textContent = `步骤 ${data.step}: ${data.name}`;
+                                document.getElementById('currentStep').textContent = `Step ${data.step}: ${data.name}`;
                                 document.getElementById('stepCounter').textContent = `${data.step} / ${totalSteps}`;
                                 document.getElementById('progressBar').style.width = `${(data.step - 1) / totalSteps * 100}%`;
                                 
@@ -4127,14 +4667,14 @@
                                 document.getElementById('chainFinalOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
                         } catch (e) {
-                            console.error('解析SSE数据失败:', e);
+                            console.error('SSE data parse failed:', e);
                         }
                     }
                 }
                 
             } catch (error) {
-                console.error('执行失败:', error);
-                alert('执行失败: ' + error.message);
+                console.error('Execution failed:', error);
+                alert('Execution failed: ' + error.message);
                 
                 const metadata = document.getElementById('chainMetadata');
                 metadata.innerHTML = `
@@ -4145,7 +4685,7 @@
             } finally {
                 // 恢复按钮
                 runBtn.disabled = false;
-                runBtn.innerHTML = '<span>▶️ 运行提示链</span>';
+                runBtn.innerHTML = '<span>▶️ Run Prompt Chain</span>';
             }
         }
 
@@ -4162,24 +4702,24 @@
         // 复制结果
         function copyChainResult() {
             if (!currentChainResult) {
-                alert('没有可复制的结果');
+                alert('No results to copy');
                 return;
             }
             
             navigator.clipboard.writeText(currentChainResult.final_output)
                 .then(() => {
-                    alert('✅ 结果已复制到剪贴板');
+                    alert('Results copied to clipboard');
                 })
                 .catch(err => {
-                    console.error('复制失败:', err);
-                    alert('复制失败，请手动复制');
+                    console.error('Copy failed:', err);
+                    alert('Copy failed, please copy manually');
                 });
         }
 
         // 下载结果
         function downloadChainResult() {
             if (!currentChainResult) {
-                alert('没有可下载的结果');
+                alert('No downloadable results');
                 return;
             }
             
@@ -4201,7 +4741,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            console.log('已下载结果到:', filename);
+            console.log('Results downloaded to:', filename);
         }
 
         // ==================== Routing Agent 相关函数 ====================
@@ -4229,13 +4769,13 @@
                     select.appendChild(option);
                 });
                 
-                console.log('已加载路由场景:', routingScenarios);
+                console.log('Routing scenarios loaded:', routingScenarios);
                 
                 // 更新策略说明
                 updateStrategyDescription();
                 
             } catch (error) {
-                console.error('加载路由场景失败:', error);
+                console.error('Failed to load routing scenarios:', error);
             }
         }
 
@@ -4286,7 +4826,7 @@
                 }
                 
                 // 加载详细路由信息
-                routesListDiv.innerHTML = '<div class="alert alert-info">加载中...</div>';
+                routesListDiv.innerHTML = '<div class="alert alert-info">Loading...</div>';
                 
                 const response = await fetch(`${API_BASE}/api/routing/routes?scenario=${scenarioId}`);
                 const data = await response.json();
@@ -4335,7 +4875,7 @@
                 routesListDiv.innerHTML = html;
                 
             } catch (error) {
-                console.error('加载路由失败:', error);
+                console.error('Failed to load routing:', error);
                 routesListDiv.innerHTML = '<div class="alert alert-error">✗ 加载失败: ' + error.message + '</div>';
             }
         }
@@ -4349,12 +4889,12 @@
             const resultCard = document.getElementById('routingResultCard');
             
             if (!scenario) {
-                alert('请先选择一个场景');
+                alert('Please select a scenario first');
                 return;
             }
             
             if (!inputText) {
-                alert('请输入任务');
+                alert('Please enter a task');
                 return;
             }
             
@@ -4363,7 +4903,7 @@
             
             // 禁用按钮
             executeBtn.disabled = true;
-            executeBtn.innerHTML = '<span>⏳ 执行中...</span>';
+            executeBtn.innerHTML = '<span>⏳ Executing...</span>';
             
             try {
                 const response = await fetch(`${API_BASE}/api/routing/route`, {
@@ -4412,12 +4952,12 @@
                 resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 
             } catch (error) {
-                console.error('执行路由失败:', error);
-                alert('执行失败: ' + error.message);
+                console.error('Route execution failed:', error);
+                alert('Execution failed: ' + error.message);
             } finally {
                 // 恢复按钮
                 executeBtn.disabled = false;
-                executeBtn.innerHTML = '<span>🚀 执行路由</span>';
+                executeBtn.innerHTML = '<span>🚀 Execute Route</span>';
             }
         }
 
@@ -4433,17 +4973,17 @@
         // 复制结果
         function copyRoutingResult() {
             if (!currentRoutingResult) {
-                alert('没有可复制的结果');
+                alert('No results to copy');
                 return;
             }
             
             navigator.clipboard.writeText(currentRoutingResult.output)
                 .then(() => {
-                    alert('✅ 结果已复制到剪贴板');
+                    alert('Results copied to clipboard');
                 })
                 .catch(err => {
-                    console.error('复制失败:', err);
-                    alert('复制失败，请手动复制');
+                    console.error('Copy failed:', err);
+                    alert('Copy failed, please copy manually');
                 });
         }
 
@@ -4465,10 +5005,10 @@
                 parallelStrategies = data.strategies;
                 parallelAggregationMethods = data.aggregation_methods;
                 
-                console.log('已加载并行化场景:', parallelScenarios);
+                console.log('Parallelization scenarios loaded:', parallelScenarios);
                 
             } catch (error) {
-                console.error('加载并行化场景失败:', error);
+                console.error('Failed to load parallelization scenarios:', error);
             }
         }
 
@@ -4511,12 +5051,12 @@
             const resultCard = document.getElementById('parallelResultCard');
             
             if (!scenarioId) {
-                alert('请先选择一个场景');
+                alert('Please select a scenario first');
                 return;
             }
             
             if (!inputText) {
-                alert('请输入内容');
+                alert('Please enter content');
                 return;
             }
             
@@ -4531,7 +5071,7 @@
             
             // 禁用按钮
             executeBtn.disabled = true;
-            executeBtn.innerHTML = '<span>⏳ 执行中...</span>';
+            executeBtn.innerHTML = '<span>⏳ Executing...</span>';
             
             try {
                 // 使用流式 API
@@ -4693,19 +5233,19 @@
                                 resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
                         } catch (e) {
-                            console.error('解析SSE数据失败:', e);
+                            console.error('SSE data parse failed:', e);
                         }
                     }
                 }
                 
             } catch (error) {
-                console.error('执行失败:', error);
-                alert('执行失败: ' + error.message);
+                console.error('Execution failed:', error);
+                alert('Execution failed: ' + error.message);
                 
             } finally {
                 // 恢复按钮
                 executeBtn.disabled = false;
-                executeBtn.innerHTML = '<span>🚀 执行并行任务</span>';
+                executeBtn.innerHTML = '<span>🚀 Execute Parallel Tasks</span>';
             }
         }
 
@@ -4727,7 +5267,7 @@
         function toggleAllParallelTasks() {
             parallelTasksExpanded = !parallelTasksExpanded;
             const btn = document.getElementById('toggleAllTasksBtn');
-            btn.textContent = parallelTasksExpanded ? '折叠全部' : '展开全部';
+            btn.textContent = parallelTasksExpanded ? '折叠全部' : 'Expand All';
             
             // 切换所有任务
             document.querySelectorAll('#parallelTaskResults [id^="task-content-"]').forEach(div => {
@@ -4757,7 +5297,7 @@
         // 复制结果
         function copyParallelResult() {
             if (!currentParallelResult) {
-                alert('没有可复制的结果');
+                alert('No results to copy');
                 return;
             }
             
@@ -4767,18 +5307,18 @@
             
             navigator.clipboard.writeText(text)
                 .then(() => {
-                    alert('✅ 结果已复制到剪贴板');
+                    alert('Results copied to clipboard');
                 })
                 .catch(err => {
-                    console.error('复制失败:', err);
-                    alert('复制失败，请手动复制');
+                    console.error('Copy failed:', err);
+                    alert('Copy failed, please copy manually');
                 });
         }
 
         // 下载结果
         function downloadParallelResult() {
             if (!currentParallelResult) {
-                alert('没有可下载的结果');
+                alert('No downloadable results');
                 return;
             }
             
@@ -4821,7 +5361,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            console.log('已下载结果到:', filename);
+            console.log('Results downloaded to:', filename);
         }
 
         // ==================== Reflection Agent 相关函数 ====================
@@ -4861,7 +5401,7 @@
             }
         }
 
-        // 更新反思策略信息（显示/隐藏专家设置）
+        // Update reflection strategy info (show/hide expert settings）
         function updateReflectionStrategyInfo() {
             const strategy = document.getElementById('reflectionStrategy').value;
             const expertSettings = document.getElementById('expertSettings');
@@ -4882,18 +5422,18 @@
             const scoreThreshold = parseFloat(document.getElementById('scoreThreshold').value);
             
             if (!scenario) {
-                alert('请先选择一个场景');
+                alert('Please select a scenario first');
                 return;
             }
             
             if (!input) {
-                alert('请输入任务描述或初始内容');
+                alert('Please enter a task description or initial content');
                 return;
             }
             
             const btn = document.getElementById('reflectionExecuteBtn');
             btn.disabled = true;
-            btn.innerHTML = '<span>⏳ 正在执行反思...</span>';
+            btn.innerHTML = '<span>⏳ Executing reflection...</span>';
             
             // 显示进度卡片
             document.getElementById('reflectionProgressCard').style.display = 'block';
@@ -4957,7 +5497,7 @@
                                 document.getElementById('reflectionStepMessage').textContent = data.message;
                             } else if (data.type === 'initial_content') {
                                 document.getElementById('reflectionStepMessage').innerHTML = 
-                                    `<strong>初始内容已生成</strong><br><div style="margin-top: 8px; padding: 12px; background: white; border-radius: 6px; max-height: 200px; overflow-y: auto;">${data.content.substring(0, 300)}...</div>`;
+                                    `<strong>Initial content generated</strong><br><div style="margin-top: 8px; padding: 12px; background: white; border-radius: 6px; max-height: 200px; overflow-y: auto;">${data.content.substring(0, 300)}...</div>`;
                             } else if (data.type === 'iteration_start') {
                                 document.getElementById('reflectionIterationCount').textContent = `第 ${data.iteration} 轮`;
                                 document.getElementById('reflectionProgressBar').style.width = 
@@ -4983,7 +5523,7 @@
                                 
                                 // 更新进度信息
                                 document.getElementById('reflectionStepMessage').innerHTML = 
-                                    `<strong>第 ${data.iteration} 轮反思完成</strong><br>` +
+                                    `<strong>Reflection round ${data.iteration} complete</strong><br>` +
                                     `评分: <strong>${data.score.toFixed(2)}</strong><br>` +
                                     `<div style="margin-top: 8px; padding: 12px; background: white; border-radius: 6px;">${critiquePreview}</div>`;
                                 
@@ -4997,7 +5537,7 @@
                                 document.getElementById('reflectionStepMessage').textContent = data.message;
                             } else if (data.type === 'improved_content') {
                                 document.getElementById('reflectionStepMessage').innerHTML = 
-                                    `<strong>第 ${data.iteration} 轮改进完成</strong><br>` +
+                                    `<strong>Improvement round ${data.iteration} complete</strong><br>` +
                                     `<div style="margin-top: 8px; padding: 12px; background: white; border-radius: 6px; max-height: 200px; overflow-y: auto;">${data.content.substring(0, 300)}...</div>`;
                             } else if (data.type === 'done') {
                                 // 显示最终结果
@@ -5012,11 +5552,11 @@
                 
             } catch (error) {
                 console.error('反思执行失败:', error);
-                alert('反思执行失败: ' + error.message);
+                alert('Reflection execution failed: ' + error.message);
                 document.getElementById('reflectionProgressCard').style.display = 'none';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<span>💭 开始反思与改进</span>';
+                btn.innerHTML = '<span>💭 Start Reflection & Improvement</span>';
             }
         }
 
@@ -5029,7 +5569,7 @@
                 const historyItem = document.createElement('div');
                 historyItem.style.cssText = 'background: #f8f9fa; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;';
                 
-                // 确保improvements是数组
+                // Ensure improvements is an array
                 const improvements = Array.isArray(item.improvements) ? item.improvements : [];
                 const improvementsHtml = improvements.map(imp => 
                     `<li style="margin: 4px 0;">${imp}</li>`
@@ -5105,10 +5645,10 @@
         function copyReflectionResult() {
             const content = document.getElementById('reflectionFinalContent').textContent;
             navigator.clipboard.writeText(content).then(() => {
-                alert('结果已复制到剪贴板！');
+                alert('Results copied to clipboard!');
             }).catch(err => {
-                console.error('复制失败:', err);
-                alert('复制失败，请手动复制');
+                console.error('Copy failed:', err);
+                alert('Copy failed, please copy manually');
             });
         }
 
@@ -5215,7 +5755,7 @@
             const info = toolTypeInfo[toolType];
             if (info) {
                 descDiv.textContent = info.description;
-                examplesDiv.innerHTML = '<strong>示例任务：</strong> ' + info.examples.join('、');
+                examplesDiv.innerHTML = '<strong>Sample Tasks:</strong> ' + info.examples.join('、');
                 infoDiv.style.display = 'block';
             }
         }
@@ -5224,7 +5764,7 @@
         async function executeToolUse() {
             const input = document.getElementById('toolUseInput').value.trim();
             if (!input) {
-                alert('请输入任务描述');
+                alert(t('alert_enter_task'));
                 return;
             }
             
@@ -5269,7 +5809,7 @@
                 
             } catch (error) {
                 console.error('Tool Use执行失败:', error);
-                alert(`执行失败: ${error.message}`);
+                alert(`Execution failed: ${error.message}`);
                 hideToolUseProgress();
             } finally {
                 executeBtn.disabled = false;
@@ -5282,7 +5822,7 @@
         async function executeToolUseStream() {
             const input = document.getElementById('toolUseInput').value.trim();
             if (!input) {
-                alert('请输入任务描述');
+                alert(t('alert_enter_task'));
                 return;
             }
             
@@ -5341,7 +5881,7 @@
                 
             } catch (error) {
                 console.error('流式执行失败:', error);
-                alert(`流式执行失败: ${error.message}`);
+                alert(`Stream execution failed: ${error.message}`);
                 hideToolUseProgress();
             } finally {
                 executeBtn.disabled = false;
@@ -5365,7 +5905,7 @@
                     displayToolUseResult(data.final_result);
                     break;
                 case 'error':
-                    alert(`执行出错: ${data.message}`);
+                    alert(`Execution error: ${data.message}`);
                     hideToolUseProgress();
                     break;
             }
@@ -5499,10 +6039,10 @@
         function copyToolUseResult() {
             const content = document.getElementById('toolUseFinalResult').textContent;
             navigator.clipboard.writeText(content).then(() => {
-                alert('结果已复制到剪贴板！');
+                alert('Results copied to clipboard!');
             }).catch(err => {
-                console.error('复制失败:', err);
-                alert('复制失败，请手动复制');
+                console.error('Copy failed:', err);
+                alert('Copy failed, please copy manually');
             });
         }
 
@@ -5558,7 +6098,7 @@
                 
             } catch (error) {
                 console.error('获取工具列表失败:', error);
-                alert(`获取工具列表失败: ${error.message}`);
+                alert(`Failed to get tool list: ${error.message}`);
             }
         }
 
@@ -5619,13 +6159,13 @@
                 
             } catch (error) {
                 console.error('获取工具历史失败:', error);
-                alert(`获取工具历史失败: ${error.message}`);
+                alert(`Failed to get tool history: ${error.message}`);
             }
         }
 
         // 显示工具历史模态框
         function displayToolHistoryModal(history, statistics) {
-            // 简化实现：使用alert显示统计信息
+            // Simplified implementation: use alert to display statistics
             let message = `工具使用统计:\n`;
             message += `总执行次数: ${statistics.total_executions}\n`;
             message += `成功次数: ${statistics.successful_executions}\n`;
@@ -5663,7 +6203,7 @@
             const autoExecute = document.getElementById('autoExecute').checked;
             
             if (!goal) {
-                alert('请输入目标描述');
+                alert('Please enter a goal description');
                 return;
             }
 
@@ -5709,7 +6249,7 @@
             } catch (error) {
                 console.error('创建规划失败:', error);
                 hidePlanningProgress();
-                alert('创建规划失败: ' + error.message);
+                alert('Failed to create plan: ' + error.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '📋 创建计划';
@@ -5718,7 +6258,7 @@
 
         async function executePlan() {
             if (!currentPlanId) {
-                alert('没有可执行的计划');
+                alert('No executable plan');
                 return;
             }
 
@@ -5751,7 +6291,7 @@
             } catch (error) {
                 console.error('执行计划失败:', error);
                 hideExecutionProgress();
-                alert('执行计划失败: ' + error.message);
+                alert('Failed to execute plan: ' + error.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '▶️ 执行计划';
@@ -5760,7 +6300,7 @@
 
         async function executePlanStream() {
             if (!currentPlanId) {
-                alert('没有可执行的计划');
+                alert('No executable plan');
                 return;
             }
 
@@ -5811,7 +6351,7 @@
             } catch (error) {
                 console.error('流式执行失败:', error);
                 hideExecutionProgress();
-                alert('流式执行失败: ' + error.message);
+                alert('Stream execution failed: ' + error.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '📡 流式执行';
@@ -5918,7 +6458,7 @@
 
         function displayPlanningResult(data) {
             if (!data.success || !data.plan) {
-                alert('创建计划失败: ' + (data.error_message || '未知错误'));
+                alert('Failed to create plan: ' + (data.error_message || 'Unknown error'));
                 return;
             }
 
@@ -5999,7 +6539,7 @@
 
         function displayExecutionResult(data) {
             if (!data.success) {
-                alert('执行失败: ' + (data.error_message || '未知错误'));
+                alert('Execution failed: ' + (data.error_message || 'Unknown error'));
                 return;
             }
 
@@ -6026,22 +6566,22 @@
             
             return `## 执行总结
 
-**执行状态**: ${data.success ? '✅ 成功完成' : '❌ 执行失败'}
+**Execution Status**: ${data.success ? '✅ Completed Successfully' : '❌ Execution Failed'}
 
-**任务统计**:
+**Task Statistics**:
 - 总任务数: ${totalTasks}
 - 完成任务: ${data.completed_tasks}
 - 失败任务: ${data.failed_tasks}
 - 成功率: ${successRate}%
 
-**执行时间**: ${formatDuration(data.total_duration)}
+**Execution Time**: ${formatDuration(data.total_duration)}
 
-**详细日志**: 共 ${data.execution_log?.length || 0} 条记录
+**Detailed Log**: ${data.execution_log?.length || 0} records total
 
 ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
 ---
-*计划执行完成时间: ${new Date().toLocaleString()}*`;
+*Plan execution completed at: ${new Date().toLocaleString()}*`;
         }
 
         function getStatusText(status) {
@@ -6104,7 +6644,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 }
             } catch (error) {
                 console.error('获取场景失败:', error);
-                alert('获取场景失败: ' + error.message);
+                alert('Failed to get scenario: ' + error.message);
             }
         }
 
@@ -6201,9 +6741,9 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             const text = `计划名称: ${planName}\n描述: ${planDescription}\n任务数: ${totalTasks}`;
             
             navigator.clipboard.writeText(text).then(() => {
-                alert('计划信息已复制到剪贴板');
+                alert('Plan info copied to clipboard');
             }).catch(err => {
-                console.error('复制失败:', err);
+                console.error('Copy failed:', err);
             });
         }
 
@@ -6225,7 +6765,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         async function deletePlan() {
             if (!currentPlanId) return;
             
-            if (!confirm('确定要删除这个计划吗？')) return;
+            if (!confirm('Are you sure you want to delete this plan?')) return;
             
             try {
                 const response = await fetch(`/api/planning/plan/${currentPlanId}`, {
@@ -6233,14 +6773,14 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 });
                 
                 if (response.ok) {
-                    alert('计划已删除');
+                    alert('Plan deleted');
                     clearPlanningResult();
                 } else {
                     throw new Error('删除失败');
                 }
             } catch (error) {
                 console.error('删除计划失败:', error);
-                alert('删除计划失败: ' + error.message);
+                alert('Failed to delete plan: ' + error.message);
             }
         }
 
@@ -6254,7 +6794,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 }
             } catch (error) {
                 console.error('获取计划列表失败:', error);
-                alert('获取计划列表失败: ' + error.message);
+                alert('Failed to get plan list: ' + error.message);
             }
         }
 
@@ -6314,12 +6854,12 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 }
             } catch (error) {
                 console.error('加载计划失败:', error);
-                alert('加载计划失败: ' + error.message);
+                alert('Failed to load plan: ' + error.message);
             }
         }
 
         async function deletePlanFromList(planId) {
-            if (!confirm('确定要删除这个计划吗？')) return;
+            if (!confirm('Are you sure you want to delete this plan?')) return;
             
             try {
                 const response = await fetch(`/api/planning/plan/${planId}`, {
@@ -6333,16 +6873,16 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 }
             } catch (error) {
                 console.error('删除计划失败:', error);
-                alert('删除计划失败: ' + error.message);
+                alert('Failed to delete plan: ' + error.message);
             }
         }
 
         function copyPlanningResult() {
             const result = document.getElementById('planningFinalResult').textContent;
             navigator.clipboard.writeText(result).then(() => {
-                alert('执行结果已复制到剪贴板');
+                alert('Execution results copied to clipboard');
             }).catch(err => {
-                console.error('复制失败:', err);
+                console.error('Copy failed:', err);
             });
         }
 
@@ -6383,26 +6923,26 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
         const LEGAL_TASK_TEMPLATES = {
             contract_review: {
-                name: '合同审查',
-                description: '完整审查合同风险并输出标准审查报告',
+                name: 'Contract Review',
+                description: 'Complete contract risk review with standard report',
                 prompt: `请对我上传的合同文件进行合同审查，重点完成以下事项：
 
-1. 识别合同基础信息，包括合同类型、合同主体、金额、期限、付款安排、违约责任和争议解决条款。
-2. 识别高风险、中风险、低风险条款，并标记风险所在条款和原文位置。
+1. Identify basic contract information including contract type, parties, amount, term, payment arrangements, breach liability, and dispute resolution clauses。
+2. Identify high, medium, and low risk clauses, and mark the clause and original text location of each risk。
 3. 给出风险原因、可能后果和适用法律依据。
 4. 针对风险项生成修改建议和替代条款。
-5. 输出合同总体风险等级、是否建议签署、优先处理事项和谈判建议。
-6. 如信息不足，请列出需要用户补充的背景信息。
+5. Output overall contract risk level, signing recommendation, priority items, and negotiation suggestions。
+6. If information is insufficient, list background information the user needs to provide。
 
 请输出标准化合同审查报告。`
             },
             risk_identification: {
-                name: '合同风险识别',
-                description: '只识别合同条款风险和风险等级',
+                name: 'Risk Identification',
+                description: 'Identify clause-level risks and risk levels',
                 prompt: `请对我上传的合同文件进行条款级风险识别，重点完成以下事项：
 
 1. 对合同条款进行结构化拆分。
-2. 识别法律风险、商业风险、履约风险、付款风险、责任风险和争议解决风险。
+2. Identify legal risks, commercial risks, performance risks, payment risks, liability risks, and dispute resolution risks。
 3. 将风险划分为高、中、低等级。
 4. 标记风险所在条款、原文位置和风险触发点。
 5. 说明风险原因、可能后果和初步处理方向。
@@ -6410,8 +6950,8 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 请输出合同风险清单。`
             },
             revision_suggestions: {
-                name: '修改建议与替代条款',
-                description: '根据合同风险生成修改建议和替代条款',
+                name: 'Revision Suggestions',
+                description: 'Generate revision suggestions and alternative clauses based on risks',
                 prompt: `请基于我上传的合同文件生成修改建议与替代条款，重点完成以下事项：
 
 1. 识别需要修改、删除、补充或谈判的条款。
@@ -6423,63 +6963,63 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 请输出可复制使用的修改建议和替代条款。`
             },
             legal_research: {
-                name: '法律依据检索',
-                description: '检索相关法律法规、案例、监管规则和企业知识库',
+                name: 'Legal Research',
+                description: 'Search relevant laws, cases, regulations and enterprise knowledge bases',
                 prompt: `请基于我上传的合同文件或条款内容进行法律依据检索，重点完成以下事项：
 
 1. 提取需要检索的法律问题和风险点。
-2. 检索相关法律法规、司法解释、监管规则、案例和企业知识库。
+2. Search relevant laws, regulations, judicial interpretations, regulatory rules, cases, and enterprise knowledge bases。
 3. 提炼相关法条、裁判观点和监管要求。
 4. 标注引用来源、文档编号或知识库条目。
-5. 说明这些依据如何适用于当前合同审查任务。
+5. Explain how these references apply to the current contract review task。
 
 请输出法律依据检索报告。`
             },
             compliance_analysis: {
-                name: '合规风险分析',
-                description: '分析合同和业务安排中的监管合规风险',
+                name: 'Compliance Analysis',
+                description: 'Analyze regulatory compliance risks in contracts and business arrangements',
                 prompt: `请对我上传的合同文件进行合规风险分析，重点完成以下事项：
 
-1. 根据合同类型、行业、交易场景和主体类型识别适用监管规则。
-2. 对合同条款和业务安排进行合规风险映射。
-3. 识别数据安全、隐私保护、劳动用工、广告宣传、金融、知识产权、反垄断等合规风险。
+1. Identify applicable regulatory rules based on contract type, industry, transaction scenario, and party types。
+2. Map compliance risks for contract clauses and business arrangements。
+3. Identify compliance risks in data security, privacy protection, labor, advertising, finance, intellectual property, antitrust, etc.。
 4. 对合规风险进行分级，并给出整改建议。
 5. 标记是否需要专项合规复核。
 
 请输出合规风险分析报告。`
             },
             review_summary: {
-                name: '审查结论摘要',
-                description: '输出面向决策的合同审查结论',
+                name: 'Review Summary',
+                description: 'Output decision-oriented contract review conclusions',
                 prompt: `请对我上传的合同文件生成审查结论摘要，重点完成以下事项：
 
 1. 汇总合同核心信息和主要风险点。
 2. 生成合同总体风险等级。
-3. 输出是否建议签署、需修改后签署或不建议签署。
+3. Output signing recommendation: sign, sign after revision, or do not sign。
 4. 汇总优先处理事项和谈判建议。
-5. 给出后续处理建议，例如补充材料、人工复核、进入审批或重新谈判。
+5. Provide follow-up recommendations such as supplementing materials, manual review, entering approval, or renegotiation。
 
 请输出面向管理层或业务负责人的审查结论摘要。`
             },
             legal_document_generation: {
-                name: '法律文书生成',
-                description: '根据事实、诉求和证据生成法律文书初稿',
+                name: 'Legal Document Generation',
+                description: 'Generate legal document drafts based on facts, claims and evidence',
                 prompt: `请根据我上传的材料和补充信息生成法律文书初稿，重点完成以下事项：
 
 1. 识别用户希望生成的文书类型。
 2. 梳理事实、主体、诉求和证据。
 3. 检索并引用相关法律依据。
 4. 生成结构完整、表达规范的法律文书初稿。
-5. 如信息不足，请列出需要用户补充的关键事实和证据。
+5. If information is insufficient, list key facts and evidence the user needs to provide。
 
 请输出可编辑的法律文书初稿。`
             },
             redline_comparison: {
-                name: '红线比对',
-                description: '将合同与企业红线规则或标准模板进行比对',
+                name: 'Redline Comparison',
+                description: 'Compare contracts against enterprise redline rules or standard templates',
                 prompt: `请对我上传的合同文件进行红线比对，重点完成以下事项：
 
-1. 识别合同中可能违反企业红线、审批规则或标准模板的条款。
+1. Identify clauses that may violate enterprise redlines, approval rules, or standard templates。
 2. 标记触发红线的条款和原文位置。
 3. 说明触发原因、风险等级和可能后果。
 4. 给出修改建议或审批处理建议。
@@ -6488,15 +7028,15 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 请输出红线比对结果。`
             },
             approval_flow_suggestion: {
-                name: '法务审批流建议',
-                description: '根据风险等级和业务场景给出审批流建议',
+                name: 'Approval Flow Suggestion',
+                description: 'Provide approval flow suggestions based on risk levels and business scenarios',
                 prompt: `请基于我上传的合同文件生成法务审批流建议，重点完成以下事项：
 
-1. 识别合同类型、交易金额、主体类型、业务场景和关键风险。
-2. 判断是否需要法务、合规、财务、业务负责人或外部律师参与审批。
+1. Identify contract type, transaction amount, party types, business scenario, and key risks。
+2. Determine whether legal, compliance, finance, business leaders, or external counsel need to participate in approval。
 3. 根据风险等级给出审批路径建议。
 4. 标记必须补充的材料和前置条件。
-5. 输出进入审批、退回修改、补充材料或人工复核的建议。
+5. Output recommendations for entering approval, returning for revision, supplementing materials, or manual review。
 
 请输出法务审批流建议。`
             }
@@ -6537,13 +7077,18 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         }
 
         const AGENT_DISPLAY_NAMES = {
-            contract_reviewer: '合同审查协调员',
-            clause_risk_analyzer: '条款风险分析师',
-            legal_researcher: '法律依据检索员',
-            drafting_specialist: '法律文书起草专家',
-            compliance_checker: '合规审查专员',
-            audit_recorder: '审计留痕记录员'
+            contract_reviewer: 'Contract Review Coordinator',
+            clause_risk_analyzer: 'Clause Risk Analyst',
+            legal_researcher: 'Legal Researcher',
+            drafting_specialist: 'Legal Drafting Specialist',
+            compliance_checker: 'Compliance Reviewer',
+            audit_recorder: 'Audit Recorder'
         };
+        
+        function getAgentDisplayName(name) {
+            const i18nKey = 'agent_' + name;
+            return t(i18nKey) || getAgentDisplayName(name);
+        }
 
         // 更新团队信息
         function updateTeamInfo() {
@@ -6569,7 +7114,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             // 显示 Agents
             let agentsHTML = '<div style="margin-bottom: 8px; font-weight: 600; color: #495057;">团队成员：</div><div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">';
             team.agents.forEach(agent => {
-                const displayName = AGENT_DISPLAY_NAMES[agent.name] || agent.name;
+                const displayName = getAgentDisplayName(agent.name);
                 agentsHTML += `
                     <div style="background: white; padding: 8px; border-radius: 6px; border: 1px solid #dee2e6;">
                         <div style="font-weight: 600; font-size: 13px; color: #495057; margin-bottom: 4px;">${displayName}</div>
@@ -6742,7 +7287,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             }
 
             if (legalSelectionPolicyState === 'error' || !legalSelectionPolicy) {
-                status.innerHTML = '法律智能体策略加载失败，无法安全发起法律协作。<button class="btn btn-sm btn-outline" onclick="loadCollaborationData()" type="button" style="margin-left: 8px;">重试</button>';
+                status.innerHTML = 'Legal agent strategy failed to load, cannot safely initiate legal collaboration。<button class="btn btn-sm btn-outline" onclick="loadCollaborationData()" type="button" style="margin-left: 8px;">重试</button>';
                 options.innerHTML = '';
                 warning.style.display = 'none';
                 restoreButton.disabled = true;
@@ -6757,12 +7302,12 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             const requiredNames = new Set(legalSelectionPolicy.required_agent_names || []);
             const selectedNames = new Set(selectedLegalAgentNames);
 
-            status.textContent = `已加载 ${Object.keys(legalSelectionPolicy.task_defaults || {}).length} 种法律任务策略，可按本次需求调整参与智能体。`;
+            status.textContent = `已加载 ${Object.keys(legalSelectionPolicy.task_defaults || {}).length}  legal task strategies, adjust participating agents as needed。`;
             restoreButton.disabled = false;
             if (startButton) startButton.disabled = false;
 
             options.innerHTML = agents.map(agent => {
-                const displayName = AGENT_DISPLAY_NAMES[agent.name] || agent.name;
+                const displayName = getAgentDisplayName(agent.name);
                 const required = requiredNames.has(agent.name);
                 const recommended = recommendedNames.has(agent.name);
                 const checked = required || selectedNames.has(agent.name);
@@ -6804,7 +7349,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             }
 
             const messages = missing.map(name => {
-                const displayName = AGENT_DISPLAY_NAMES[name] || name;
+                const displayName = getAgentDisplayName(name);
                 const gapMessage = legalSelectionPolicy.capability_gaps?.[name] || '可能缺少对应专业能力';
                 return `${displayName}：${gapMessage}`;
             });
@@ -6843,7 +7388,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             const parseStatus = document.getElementById('legalFileParseStatus');
 
             if (!fileInput?.files?.length) {
-                alert('请选择合同或法律材料文件');
+                alert('Please select a contract or legal material file');
                 return;
             }
 
@@ -6854,7 +7399,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             if (parseStatus) {
                 parseStatus.style.display = 'block';
                 parseStatus.style.color = '#166534';
-                parseStatus.textContent = '正在上传并解析合同文件...';
+                parseStatus.textContent = '正在上传并<span data-i18n="parse_contract_btn">Parse Contract</span>文件...';
             }
             if (parseBtn) {
                 parseBtn.disabled = true;
@@ -6887,7 +7432,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             } finally {
                 if (parseBtn) {
                     parseBtn.disabled = false;
-                    parseBtn.textContent = '上传并解析合同文件';
+                    parseBtn.textContent = '上传并<span data-i18n="parse_contract_btn">Parse Contract</span>文件';
                 }
             }
         }
@@ -6898,7 +7443,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             const filePath = filePathInput?.value.trim();
 
             if (!filePath) {
-                alert('请输入合同或法律材料文件路径');
+                alert('Please enter contract or legal material file path');
                 return;
             }
 
@@ -6909,7 +7454,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             if (parseStatus) {
                 parseStatus.style.display = 'block';
                 parseStatus.style.color = '#166534';
-                parseStatus.textContent = '正在按服务器路径解析合同文件...';
+                parseStatus.textContent = '正在按服务器路径<span data-i18n="parse_contract_btn">Parse Contract</span>文件...';
             }
 
             try {
@@ -7001,7 +7546,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                             <div class="legal-parse-summary-value">${escapeHtml(summary?.key_clause_summary?.length || 0)} 项</div>
                         </div>
                     </div>
-                    ${structureSummary || '<div class="legal-parse-summary-note">未识别结构化摘要，仍可继续发起多智能体审查并由人工复核。</div>'}
+                    ${structureSummary || '<div class="legal-parse-summary-note">No structured summary identified, you can still proceed with multi-agent review and manual verification。</div>'}
                     ${warningHtml}
                 </div>
             `;
@@ -7140,18 +7685,18 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             } : null;
 
             if (!task) {
-                alert('请输入任务描述');
+                alert(t('alert_enter_task'));
                 return;
             }
             
             if (!teamType) {
-                alert('请选择协作团队');
+                alert(t('alert_select_team'));
                 return;
             }
 
             if (teamType === 'legal_contract_review' && legalSelectionPolicyState !== 'ready') {
                 renderLegalAgentSelection();
-                alert('法律智能体策略尚未加载完成，请稍后重试');
+                alert(t('alert_policy_not_ready'));
                 return;
             }
 
@@ -7160,11 +7705,11 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             
             const startBtn = document.getElementById('collaborationStartBtn');
             startBtn.disabled = true;
-            startBtn.textContent = '审查中...';
+            startBtn.textContent = t('reviewing_text');
             
             // 显示进度卡片
             document.getElementById('collaborationProgressCard').style.display = 'block';
-            document.getElementById('collaborationStatus').textContent = '正在初始化法律多智能体审查...';
+            document.getElementById('collaborationStatus').textContent = t('initializing_text');
             
             // 隐藏之前的结果
             document.getElementById('agentContributionsCard').style.display = 'none';
@@ -7222,11 +7767,11 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 
             } catch (error) {
                 console.error('协作失败:', error);
-                alert('协作失败: ' + error.message);
-                document.getElementById('collaborationStatus').textContent = '协作失败: ' + error.message;
+                alert(t('alert_collaboration_failed') + error.message);
+                document.getElementById('collaborationStatus').textContent = t('alert_collaboration_failed') + error.message;
             } finally {
                 startBtn.disabled = false;
-                startBtn.textContent = '开始多智能体审查';
+                startBtn.textContent = '<span data-i18n="start_collaboration_btn">Start Multi-Agent Review</span>';
             }
         }
 
@@ -7247,7 +7792,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                         || [];
                     const selectionSource = agentSelection?.selection_source || '未记录';
                     const selectedAgentText = selectedAgentNames.length
-                        ? selectedAgentNames.map(name => AGENT_DISPLAY_NAMES[name] || name).join('、')
+                        ? selectedAgentNames.map(name => getAgentDisplayName(name)).join('、')
                         : '服务端未返回参与名单';
                     const teamInfoHTML = `
                         <div style="font-weight: 600; margin-bottom: 8px;">法律专家团队: ${data.team_name} (${data.agent_count} 位专家)</div>
@@ -7256,7 +7801,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                         <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">选择来源: ${escapeHtml(selectionSource)}</div>
                     `;
                     document.getElementById('collaborationTeamInfo').innerHTML = teamInfoHTML;
-                    statusDiv.textContent = '法律专家团队已组建，开始审查...';
+                    statusDiv.textContent = t('status_team_ready');
                     break;
                     
                 case 'complete':
@@ -7275,7 +7820,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         // 显示协作结果
         function displayCollaborationResult(data) {
             if (!data.success) {
-                alert('协作失败: ' + data.error_message);
+                alert('Collaboration failed: ' + data.error_message);
                 return;
             }
 
@@ -7322,7 +7867,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             const contributionEntries = Object.entries(contributions);
             const summary = document.getElementById('agentContributionsSummary');
             if (summary) {
-                summary.textContent = `默认折叠，共 ${contributionEntries.length} 位法律专家参与分析，展开后查看完整过程。`;
+                summary.textContent = `默认折叠，共 ${contributionEntries.length}  legal experts participated, expand to view complete process。`;
             }
 
             for (const [agentName, contribution] of contributionEntries) {
@@ -7342,7 +7887,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 const statusLabel = status === 'failed' ? '失败' : '完成';
                 const statusColor = status === 'failed' ? '#b91c1c' : '#166534';
                 const responseText = status === 'failed'
-                    ? '该智能体执行失败，内部异常已隐藏。请结合其他专家结果并进行人工复核。'
+                    ? 'This agent execution failed, internal exception hidden. Please combine with other expert results and conduct manual review。'
                     : (contribution.response || '');
                 
                 contributionDiv.innerHTML = `
@@ -7371,7 +7916,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
 
             const summary = document.getElementById('messagesSummary');
             if (summary) {
-                summary.textContent = `默认折叠，共 ${messages.length} 条协作记录，展开后查看任务分发和响应过程。`;
+                summary.textContent = `默认折叠，共 ${messages.length}  collaboration records, expand to view task distribution and response process。`;
             }
 
             messages.forEach(message => {
@@ -7419,9 +7964,9 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             
             const result = currentCollaborationResult.final_output;
             navigator.clipboard.writeText(result).then(() => {
-                alert('审查报告已复制到剪贴板');
+                alert('Review report copied to clipboard');
             }).catch(err => {
-                console.error('复制失败:', err);
+                console.error('Copy failed:', err);
             });
         }
 
@@ -7440,7 +7985,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `legal_review_report_${timestamp}.md`;
             const selectedAgentText = selectedAgentNames.length
-                ? selectedAgentNames.map(name => AGENT_DISPLAY_NAMES[name] || name).join('、')
+                ? selectedAgentNames.map(name => getAgentDisplayName(name)).join('、')
                 : '未记录';
             const gapText = capabilityGaps.length
                 ? capabilityGaps.map(gap => {
@@ -7459,7 +8004,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             content += `**实际参与智能体**: ${selectedAgentText}\n`;
             content += `**能力缺口提示**: ${gapText}\n`;
             content += `**关联资料库**: ${knowledgeBaseSnapshot.displayName || '未关联资料库'}\n`;
-            content += `**包含公共知识库**: ${knowledgeBaseSnapshot.includePublicKnowledge ? '是' : '否'}\n`;
+            content += `**<span data-i18n="include_public_kb">Include Public KB</span>**: ${knowledgeBaseSnapshot.includePublicKnowledge ? '是' : '否'}\n`;
             content += `**合同或材料文件**: ${legalFilePath}\n`;
             if (fileSnapshot.uploadedFileId) {
                 content += `**上传文件ID**: ${fileSnapshot.uploadedFileId}\n`;
@@ -7468,7 +8013,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             content += `**发起时间**: ${requestSnapshot.startedAt || '未记录'}\n`;
             content += `**参与专家数**: ${Object.keys(contributions).length}\n`;
             content += `**审查耗时**: ${Number(currentCollaborationResult.execution_time || 0).toFixed(1)}s\n\n`;
-            content += `> 本报告由法律多智能体系统辅助生成，不构成正式律师意见；请由具备资质的专业人员结合事实、证据和适用法律进行人工复核。\n\n`;
+            content += `> This report is AI-assisted and does not constitute formal legal opinion; please have qualified professionals review based on facts, evidence, and applicable law。\n\n`;
             content += `---\n\n`;
             content += `## 最终审查结论\n\n${currentCollaborationResult.final_output}\n\n`;
             content += `---\n\n`;
@@ -7479,7 +8024,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 const statusLabel = status === 'failed' ? '失败' : '完成';
                 content += `### ${AGENT_DISPLAY_NAMES[agentName] || agentName} (${contribution.role || 'unknown'} · ${statusLabel})\n\n`;
                 if (status === 'failed') {
-                    content += `该智能体执行失败，内部异常已隐藏。请结合其他专家结果并进行人工复核。\n\n`;
+                    content += `This agent execution failed, internal exception hidden. Please combine with other expert results and conduct manual review。\n\n`;
                     continue;
                 }
                 content += `${contribution.response || ''}\n\n`;
@@ -7517,7 +8062,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             
             html += '</div>';
             
-            alert('团队详情已在控制台输出');
+            alert('Team details output to console');
             console.log('协作团队:', collaborationTeamsData);
         }
 
@@ -7541,7 +8086,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             
             html += '</div>';
             
-            alert('模式详情已在控制台输出');
+            alert('Mode details output to console');
             console.log('协作模式:', collaborationModesData);
         }
 
@@ -7550,7 +8095,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
             if (!currentCollaborationResult) return;
             
             console.log('完整协作结果:', currentCollaborationResult);
-            alert('完整协作结果已在控制台输出，可以按 F12 查看');
+            alert('Complete collaboration results output to console, press F12 to view');
         }
 
         // ==================== Memory Management 相关函数 ====================
@@ -7560,7 +8105,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         async function storeMemory() {
             const content = document.getElementById('memoryContent').value.trim();
             if (!content) {
-                alert('请输入记忆内容');
+                alert('Please enter memory content');
                 return;
             }
             
@@ -7584,14 +8129,14 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 
                 const data = await response.json();
                 if (data.success) {
-                    alert('✅ 记忆已存储！');
+                    alert('Memory stored!');
                     document.getElementById('memoryContent').value = '';
                     document.getElementById('memoryTags').value = '';
                     loadMemoryStats();
                 }
             } catch (error) {
                 console.error('存储记忆失败:', error);
-                alert('存储记忆失败，请重试');
+                alert('Failed to store memory, please retry');
             }
         }
 
@@ -7599,7 +8144,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
         async function retrieveMemories() {
             const query = document.getElementById('memoryQuery').value.trim();
             if (!query) {
-                alert('请输入查询内容');
+                alert('Please enter query content');
                 return;
             }
             
@@ -7624,7 +8169,7 @@ ${data.error_message ? `**错误信息**: ${data.error_message}` : ''}
                 displayMemoryResults(data.results);
             } catch (error) {
                 console.error('检索记忆失败:', error);
-                alert('检索记忆失败，请重试');
+                alert('Failed to retrieve memory, please retry');
             }
         }
 

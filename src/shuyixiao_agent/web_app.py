@@ -975,13 +975,12 @@ def get_memory_agent(session_id: str = "default", max_memories: int = 1000):
     return memory_agents[cache_key]
 
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    """返回前端 HTML 页面"""
-    print(f"[请求] GET / - 返回主页")
+def _serve_static_html(filename: str, label: str) -> HTMLResponse:
+    """返回静态 HTML 页面"""
+    print(f"[请求] GET /{label} - 返回{label}页面")
     
     static_dir = Path(__file__).parent / "static"
-    html_file = static_dir / "index.html"
+    html_file = static_dir / filename
     
     print(f"[信息] 静态文件目录: {static_dir}")
     print(f"[信息] HTML 文件路径: {html_file}")
@@ -993,14 +992,26 @@ async def read_root():
         return HTMLResponse(content=content)
     else:
         print(f"[警告] HTML 文件不存在: {html_file}")
-        return HTMLResponse(content="""
+        return HTMLResponse(content=f"""
         <html>
             <body>
-                <h1>前端页面未找到</h1>
-                <p>请确保 static/index.html 文件存在</p>
+                <h1>{label} 页面未找到</h1>
+                <p>请确保 static/{filename} 文件存在</p>
             </body>
         </html>
         """)
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    """返回国内版前端 HTML 页面（紫微星）"""
+    return _serve_static_html("index.html", "国内版")
+
+
+@app.get("/global", response_class=HTMLResponse)
+async def read_global():
+    """返回国际版前端 HTML 页面（盖亚 Gaia）"""
+    return _serve_static_html("global.html", "国际版")
 
 
 @app.post("/api/chat", response_model=ChatResponse)
