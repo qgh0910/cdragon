@@ -90,9 +90,15 @@ def test_multi_agent_frontend_sends_knowledge_base_ids_not_tenant_or_collection(
     html = _index_html()
 
     assert 'id="multiAgentIncludePublicKnowledge"' in html
-    assert "const selectedKnowledgeBaseIds = selectedKnowledgeBaseId ? [selectedKnowledgeBaseId] : []" in html
-    assert "knowledge_base_ids: selectedKnowledgeBaseIds" in html
-    assert "include_public_knowledge: includePublicKnowledge" in html
+    assert (
+        "const knowledgeBaseIds = Object.freeze(selectedKnowledgeBaseId ? "
+        "[selectedKnowledgeBaseId] : [])" in html
+    )
+    assert "knowledge_base_ids: snapshot.knowledgeBase.ids" in html
+    assert (
+        "include_public_knowledge: snapshot.knowledgeBase.includePublicKnowledge"
+        in html
+    )
 
     start = html.index("async function startCollaboration()")
     end = html.index("// 处理协作事件", start)

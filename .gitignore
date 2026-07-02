@@ -39,6 +39,10 @@ data/
 
 # Local project notes and stage progress
 my_docs/
+!my_docs/
+my_docs/*
+!my_docs/2026-06-10-用户登录与知识库权限接口清单.md
+!my_docs/2026-06-10-legacy-kb-migration-report.md
 
 # Local notebooks
 .ipynb_checkpoints/
