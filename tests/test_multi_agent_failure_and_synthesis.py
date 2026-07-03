@@ -78,6 +78,7 @@ def _collaboration(
     legal_policy=True,
     max_rounds=3,
     synthesis_outcomes=None,
+    lang="zh",
 ):
     collaboration = MultiAgentCollaboration(
         _ScriptedLLM(scripts, synthesis_outcomes=synthesis_outcomes),
@@ -87,6 +88,7 @@ def _collaboration(
         execution_policy=(
             LegalCollaborationExecutionPolicy() if legal_policy else None
         ),
+        lang=lang,
     )
     return collaboration
 
@@ -326,3 +328,78 @@ def test_legacy_synthesis_failure_keeps_old_fallback_and_empty_metadata():
     assert result.final_output.startswith("# 协作结果")
     assert "legacy completed response" in result.final_output
     assert result.metadata == {}
+
+
+def test_legal_language_guard_metadata_is_merged_into_execution():
+    collaboration = _collaboration(
+        "parallel",
+        {"completed_agent": ["completed result"]},
+        synthesis_outcomes=["Русский 人工复核", "Исправленный русский отчёт."],
+        lang="ru",
+    )
+    collaboration.register_agent(
+        _agent("completed_agent", AgentRole.COORDINATOR)
+    )
+
+    result = collaboration.collaborate("Проверьте договор")
+
+    guard = result.metadata["execution"]["language_guard"]
+    assert result.success is True
+    assert result.metadata["execution"]["synthesis_status"] == "completed"
+    assert guard["initial_valid"] is False
+    assert guard["retry_attempted"] is True
+    assert guard["retry_valid"] is True
+
+
+def test_language_guard_fail_closed_is_successful_degraded_collaboration():
+    collaboration = _collaboration(
+        "parallel",
+        {"completed_agent": ["completed result"]},
+        synthesis_outcomes=["English 人工复核", "Still 人工复核"],
+        lang="en",
+    )
+    collaboration.register_agent(
+        _agent("completed_agent", AgentRole.COORDINATOR)
+    )
+
+    result = collaboration.collaborate("Review contract")
+
+    assert result.success is True
+    assert result.metadata["execution"]["synthesis_status"] == "degraded"
+    assert result.metadata["execution"]["language_guard"]["retry_valid"] is False
+    assert "no legal conclusion is provided" in result.final_output
+    assert "人工复核" not in result.final_output
+
+
+def test_generic_guarded_output_creates_minimal_execution_metadata():
+    collaboration = _collaboration(
+        "parallel",
+        {"legacy_agent": ["legacy response"]},
+        legal_policy=False,
+        synthesis_outcomes=["English final report."],
+        lang="en",
+    )
+    collaboration.register_agent(
+        _agent("legacy_agent", AgentRole.COORDINATOR)
+    )
+
+    result = collaboration.collaborate("Review")
+
+    assert result.metadata["execution"]["synthesis_status"] == "completed"
+    assert result.metadata["execution"]["language_guard"]["initial_valid"] is True
+    assert "completed_agent_count" not in result.metadata["execution"]
+
+
+def test_zh_does_not_add_language_guard_metadata():
+    zh_collaboration = _collaboration(
+        "parallel",
+        {"completed_agent": ["已完成"]},
+        lang="zh",
+    )
+    zh_collaboration.register_agent(
+        _agent("completed_agent", AgentRole.COORDINATOR)
+    )
+
+    zh_result = zh_collaboration.collaborate("审查合同")
+
+    assert "language_guard" not in zh_result.metadata["execution"]

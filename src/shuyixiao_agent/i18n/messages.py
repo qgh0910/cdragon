@@ -124,4 +124,75 @@ MESSAGES: Mapping[str, Mapping[str, str]] = {
     "agent.audit_recorder.expertise.1": {"en": "Explainability checks", "zh": "可解释性检查", "ru": "Проверка объяснимости"},
     "agent.audit_recorder.expertise.2": {"en": "Citation traceability", "zh": "引用追溯", "ru": "Прослеживаемость ссылок"},
     "agent.audit_recorder.expertise.3": {"en": "Output completeness validation", "zh": "输出完整性校验", "ru": "Проверка полноты результатов"},
+
+    "synthesis.generic.degraded_title": {
+        "en": "Collaboration Result",
+        "zh": "协作结果",
+        "ru": "Результат совместной работы",
+    },
+    "synthesis.generic.original_task_label": {
+        "en": "Original Task:",
+        "zh": "原始任务：",
+        "ru": "Исходная задача:",
+    },
+    "synthesis.language_guard.failed_title": {
+        "en": "Report Language Validation Failed",
+        "zh": "报告语言校验失败",
+        "ru": "Проверка языка отчёта не пройдена",
+    },
+    "synthesis.language_guard.failed_body": {
+        "en": "The system could not generate a review report entirely in the selected language, so no legal conclusion is provided. Please retry or request human review.",
+        "zh": "系统未能生成完全符合所选语言要求的审查报告，因此未提供法律结论。请重试或进行人工复核。",
+        "ru": "Система не смогла сформировать отчёт о проверке полностью на выбранном языке, поэтому юридическое заключение не предоставляется. Повторите попытку или запросите проверку специалистом.",
+    },
+    "synthesis.legal.degraded_title": {
+        "en": "Legal Multi-Agent Collaboration Fallback Report",
+        "zh": "法律多智能体协作降级报告",
+        "ru": "Отчёт о резервной работе юридической мульти-агентной системы",
+    },
+    "synthesis.legal.degraded_intro": {
+        "en": "Final synthesis has been degraded: the synthesis model call failed. The content below is derived from bounded excerpts of completed agents. Human review is required.",
+        "zh": "最终整合已降级：最终整合模型调用失败，以下内容基于已完成 Agent 的受限摘录生成，请人工复核。",
+        "ru": "Итоговое объединение результатов было понижено в режиме: вызов модели итогового объединения не удался. Содержимое ниже сформировано из ограниченных выдержек завершённых агентов. Требуется проверка специалистом.",
+    },
+    "synthesis.legal.degraded_excerpts_heading": {
+        "en": "Bounded Result Excerpts",
+        "zh": "受限成果摘录",
+        "ru": "Ограниченные выдержки результатов",
+    },
+    "synthesis.legal.degraded_empty_excerpts": {
+        "en": "No excerpts are available.",
+        "zh": "无可用成果摘录。",
+        "ru": "Выдержки отсутствуют.",
+    },
+    "synthesis.legal.human_review_heading": {
+        "en": "Human Review Notice",
+        "zh": "人工复核提示",
+        "ru": "Уведомление о проверке специалистом",
+    },
+    "synthesis.legal.human_review_body": {
+        "en": "This report does not constitute formal legal counsel. Please conduct human review against the original contract, legal basis and business context.",
+        "zh": "本报告不构成正式律师意见，请结合原合同、法律依据和业务背景进行人工复核。",
+        "ru": "Настоящий отчёт не является официальным юридическим заключением. Требуется проверка специалистом с учётом исходного договора, правовой базы и бизнес-контекста.",
+    },
+    "synthesis.legal.context.original_task_label": {
+        "en": "Original Task:",
+        "zh": "原始任务:",
+        "ru": "Исходная задача:",
+    },
+    "synthesis.legal.context.limitations_label": {
+        "en": "Result Limitations:",
+        "zh": "结果局限:",
+        "ru": "Ограничения результата:",
+    },
+    "synthesis.legal.context.failed_agents_prefix": {
+        "en": "The following agents failed to complete and are excluded from professional results: ",
+        "zh": "以下 Agent 执行失败，未纳入专业成果：",
+        "ru": "Следующие агенты не завершили выполнение и исключены из профессиональных результатов: ",
+    },
+    "synthesis.legal.context.failed_agents_separator": {
+        "en": ", ",
+        "zh": "、",
+        "ru": ", ",
+    },
 }

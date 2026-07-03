@@ -22,3 +22,27 @@ def test_unsupported_falls_back_to_en():
 def test_suffix_starts_with_double_newline():
     for lang in ("en", "ru"):
         assert build_llm_language_suffix(lang).startswith("\n\n")
+
+
+def test_en_suffix_requires_target_language_outside_original_quotes():
+    suffix = build_llm_language_suffix("en")
+
+    assert "Write all titles, analysis, conclusions" in suffix
+    assert "recommendations, and disclaimers" in suffix
+    assert "<original_quote>" in suffix
+    assert "outside" in suffix
+    assert "CJK or Cyrillic" in suffix
+
+
+def test_ru_suffix_requires_target_language_outside_original_quotes():
+    suffix = build_llm_language_suffix("ru")
+
+    assert "Все заголовки, анализ, выводы" in suffix
+    assert "рекомендации и оговорки" in suffix
+    assert "<original_quote>" in suffix
+    assert "Вне" in suffix
+    assert "кириллицу" in suffix
+
+
+def test_zh_suffix_remains_empty_after_quote_rule_change():
+    assert build_llm_language_suffix("zh") == ""

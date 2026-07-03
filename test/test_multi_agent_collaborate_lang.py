@@ -54,7 +54,7 @@ def test_lang_en_prompt_has_english_suffix():
 
     assert "## Output Language" in prompt
     assert "English" in prompt
-    assert prompt.endswith("if a verbatim quote is required.")
+    assert prompt.endswith("Cyrillic characters outside those tags.")
 
 
 def test_lang_ru_prompt_has_russian_suffix():
