@@ -912,8 +912,8 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" data-tab="multiagent" onclick="switchTab('multiagent')">法律多智能体系统</button>
-            <button class="tab" data-tab="knowledge" onclick="switchTab('knowledge')">知识库管理</button>
+            <button class="tab active" data-tab="multiagent" onclick="switchTab('multiagent')" data-i18n="tab_multiagent">法律多智能体系统</button>
+            <button class="tab" data-tab="knowledge" onclick="switchTab('knowledge')" data-i18n="tab_knowledge">知识库管理</button>
         </div>
 
         <div class="content">
@@ -1007,129 +1007,129 @@
                 <div class="rag-section scrollbar">
                     <!-- 创建用户知识库 -->
                     <div class="rag-card">
-                        <h3>➕ 我的知识库</h3>
+                        <h3 data-i18n="knowledge.create.user.title">➕ 我的知识库</h3>
                         <div class="form-group">
-                            <label>知识库名称：</label>
-                            <input type="text" id="createUserKbName" placeholder="例如：我的合同模板">
+                            <label data-i18n="knowledge.create.user_name_label">知识库名称：</label>
+                            <input type="text" id="createUserKbName" data-i18n-placeholder="knowledge.create.user_name_placeholder" placeholder="例如：我的合同模板">
                         </div>
                         <div class="form-group">
-                            <label>说明：</label>
-                            <textarea id="createUserKbDescription" placeholder="可选，例如：个人常用合同模板和审查规则" style="min-height: 80px;"></textarea>
+                            <label data-i18n="knowledge.common.description_label">说明：</label>
+                            <textarea id="createUserKbDescription" data-i18n-placeholder="knowledge.create.user_description_placeholder" placeholder="可选，例如：个人常用合同模板和审查规则" style="min-height: 80px;"></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="createUserKnowledgeBase()" style="width: 100%;">创建我的知识库</button>
+                        <button class="btn btn-primary" onclick="createUserKnowledgeBase()" style="width: 100%;" data-i18n="knowledge.create.user.action">创建我的知识库</button>
                         <div id="createUserKbResult"></div>
                     </div>
 
                     <!-- 管理员公共知识库 -->
                     <div id="publicKbAdminCard" class="rag-card auth-hidden" data-admin-only="true">
-                        <h3>🏛️ 公共知识库管理</h3>
+                        <h3 data-i18n="knowledge.create.public.title">🏛️ 公共知识库管理</h3>
                         <div class="form-group">
-                            <label>公共知识库名称：</label>
-                            <input type="text" id="createPublicKbName" placeholder="例如：法规案例库">
+                            <label data-i18n="knowledge.create.public_name_label">公共知识库名称：</label>
+                            <input type="text" id="createPublicKbName" data-i18n-placeholder="knowledge.create.public_name_placeholder" placeholder="例如：法规案例库">
                         </div>
                         <div class="form-group">
-                            <label>说明：</label>
-                            <textarea id="createPublicKbDescription" placeholder="可选，例如：全员可检索的法规、案例和合规规则" style="min-height: 80px;"></textarea>
+                            <label data-i18n="knowledge.common.description_label">说明：</label>
+                            <textarea id="createPublicKbDescription" data-i18n-placeholder="knowledge.create.public_description_placeholder" placeholder="可选，例如：全员可检索的法规、案例和合规规则" style="min-height: 80px;"></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="createPublicKnowledgeBase()" style="width: 100%;">创建公共知识库</button>
+                        <button class="btn btn-primary" onclick="createPublicKnowledgeBase()" style="width: 100%;" data-i18n="knowledge.create.public.action">创建公共知识库</button>
                         <div id="createPublicKbResult"></div>
                     </div>
 
                     <!-- 上传文本 -->
                     <div class="rag-card">
-                        <h3>📝 上传法律资料文本</h3>
+                        <h3 data-i18n="knowledge.upload.text.title">📝 上传法律资料文本</h3>
                         <div class="form-group">
-                            <label>目标知识库：</label>
+                            <label data-i18n="knowledge.upload.target_label">目标知识库：</label>
                             <select id="uploadKbSelect" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载或创建知识库 --</option>
+                                <option value="" data-i18n="knowledge.upload.target_placeholder">-- 请先加载或创建知识库 --</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>法律资料内容（每行一条资料）：</label>
-                            <textarea id="textContent" placeholder="输入要加入资料库的法规条文、合同条款、案例摘要或企业制度..."></textarea>
+                            <label data-i18n="knowledge.upload.text.content_label">法律资料内容（每行一条资料）：</label>
+                            <textarea id="textContent" data-i18n-placeholder="knowledge.upload.text.content_placeholder" placeholder="输入要加入资料库的法规条文、合同条款、案例摘要或企业制度..."></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="uploadTexts()" style="width: 100%;">上传法律资料文本</button>
+                        <button class="btn btn-primary" onclick="uploadTexts()" style="width: 100%;" data-i18n="knowledge.upload.text.action">上传法律资料文本</button>
                         <div id="uploadTextResult"></div>
                     </div>
 
                     <!-- 文件上传 -->
                     <div class="rag-card">
-                        <h3>📁 上传法律资料文件</h3>
+                        <h3 data-i18n="knowledge.upload.file.title">📁 上传法律资料文件</h3>
                         <div class="form-group">
-                            <label>目标知识库：</label>
+                            <label data-i18n="knowledge.upload.target_label">目标知识库：</label>
                             <select id="fileUploadKbSelect" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载或创建知识库 --</option>
+                                <option value="" data-i18n="knowledge.upload.target_placeholder">-- 请先加载或创建知识库 --</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>选择法律资料文件：</label>
+                            <label data-i18n="knowledge.upload.file.file_label">选择法律资料文件：</label>
                             <input type="file" id="ragUploadFile" accept=".pdf,.docx,.md,.markdown,.txt,.text">
                         </div>
-                        <button class="btn btn-primary" onclick="uploadFile()" style="width: 100%;">上传法律资料文件</button>
+                        <button class="btn btn-primary" onclick="uploadFile()" style="width: 100%;" data-i18n="knowledge.upload.file.action">上传法律资料文件</button>
                         <div id="uploadFileResult"></div>
                     </div>
 
                     <!-- 知识库信息 -->
                     <div class="rag-card">
-                        <h3>ℹ️ 资料库状态</h3>
+                        <h3 data-i18n="knowledge.info.title">ℹ️ 资料库状态</h3>
                         <div class="form-group">
-                            <label>选择资料库：</label>
+                            <label data-i18n="knowledge.info.selector_label">选择资料库：</label>
                             <select id="infoCollection" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载资料库列表 --</option>
+                                <option value="" data-i18n="knowledge.common.load_list_placeholder">-- 请先加载资料库列表 --</option>
                             </select>
                         </div>
-                        <button class="btn btn-secondary" onclick="getKnowledgeInfo()" style="width: 100%; margin-bottom: 16px;">刷新状态</button>
+                        <button class="btn btn-secondary" onclick="getKnowledgeInfo()" style="width: 100%; margin-bottom: 16px;" data-i18n="knowledge.info.refresh_action">刷新状态</button>
                         <div id="knowledgeInfo">
-                            <div class="alert alert-info">点击“刷新状态”查看资料库状态</div>
+                            <div class="alert alert-info" data-i18n="knowledge.info.empty">点击“刷新状态”查看资料库状态</div>
                         </div>
                     </div>
 
                     <!-- 所有知识库列表 -->
                     <div class="rag-card">
-                        <h3>📚 已有资料库</h3>
-                        <p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">
+                        <h3 data-i18n="knowledge.list.title">📚 已有资料库</h3>
+                        <p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;" data-i18n="knowledge.list.description">
                             管理可供法律审查调用的法规、案例、合同模板和企业制度资料库。
                         </p>
-                        <button class="btn btn-secondary" onclick="loadAllCollections()" style="width: 100%; margin-bottom: 16px;">刷新资料库列表</button>
+                        <button class="btn btn-secondary" onclick="loadAllCollections()" style="width: 100%; margin-bottom: 16px;" data-i18n="knowledge.list.refresh_action">刷新资料库列表</button>
                         <div id="collectionsList"></div>
                     </div>
 
                     <!-- 上传审计 -->
                     <div class="rag-card">
-                        <h3>🧾 上传审计记录</h3>
-                        <button class="btn btn-secondary" onclick="loadUploadAudit()" style="width: 100%; margin-bottom: 16px;">查看上传审计</button>
+                        <h3 data-i18n="knowledge.audit.title">🧾 上传审计记录</h3>
+                        <button class="btn btn-secondary" onclick="loadUploadAudit()" style="width: 100%; margin-bottom: 16px;" data-i18n="knowledge.audit.load_action">查看上传审计</button>
                         <div id="uploadAuditList"></div>
                     </div>
 
                     <!-- 知识库管理 -->
                     <div class="rag-card">
-                        <h3>🗑️ 危险操作</h3>
+                        <h3 data-i18n="knowledge.danger.title">🗑️ 危险操作</h3>
                         <div class="form-group">
-                            <label>选择知识库：</label>
+                            <label data-i18n="knowledge.danger.selector_label">选择知识库：</label>
                             <select id="manageKbSelect" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请选择可管理知识库 --</option>
+                                <option value="" data-i18n="knowledge.danger.selector_placeholder">-- 请选择可管理知识库 --</option>
                             </select>
                         </div>
-                        <button class="btn btn-danger" onclick="clearKnowledgeBase()" style="width: 100%; margin-bottom: 12px;">清空资料库</button>
-                        <button class="btn btn-danger" onclick="deleteKnowledgeBaseCollection()" style="width: 100%; margin-bottom: 12px;">删除资料库</button>
-                        <div class="alert alert-info" style="margin: 0;">
+                        <button class="btn btn-danger" onclick="clearKnowledgeBase()" style="width: 100%; margin-bottom: 12px;" data-i18n="knowledge.danger.clear_action">清空资料库</button>
+                        <button class="btn btn-danger" onclick="deleteKnowledgeBaseCollection()" style="width: 100%; margin-bottom: 12px;" data-i18n="knowledge.danger.delete_action">删除资料库</button>
+                        <div class="alert alert-info" style="margin: 0;" data-i18n="knowledge.danger.warning">
                             ⚠️ 清空资料库会删除库内资料但保留资料库；删除资料库会移除库本身并从列表中消失，操作不可恢复。
                         </div>
                     </div>
 
                     <!-- 文档浏览器 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>📄 浏览资料库内容</h3>
+                        <h3 data-i18n="knowledge.documents.title">📄 浏览资料库内容</h3>
                         <div class="form-group">
-                            <label>查看资料库：</label>
+                            <label data-i18n="knowledge.documents.selector_label">查看资料库：</label>
                             <select id="browserCollection" style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                <option value="">-- 请先加载资料库列表 --</option>
+                                <option value="" data-i18n="knowledge.common.load_list_placeholder">-- 请先加载资料库列表 --</option>
                             </select>
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                            <button class="btn btn-secondary" onclick="loadDocuments()" style="flex: 1;">加载资料列表</button>
-                            <button class="btn btn-secondary" onclick="refreshDocuments()">刷新</button>
-                            <button class="btn btn-danger" onclick="batchDeleteDocuments()" id="batchDeleteBtn" style="display: none;">删除选中资料</button>
+                            <button class="btn btn-secondary" onclick="loadDocuments()" style="flex: 1;" data-i18n="knowledge.documents.load_action">加载资料列表</button>
+                            <button class="btn btn-secondary" onclick="refreshDocuments()" data-i18n="knowledge.documents.refresh_action">刷新</button>
+                            <button class="btn btn-danger" onclick="batchDeleteDocuments()" id="batchDeleteBtn" style="display: none;" data-i18n="knowledge.documents.delete_selected_action">删除选中资料</button>
                         </div>
                         <div id="docStats"></div>
                         <div id="docBrowser"></div>
@@ -2068,64 +2068,64 @@
                 <div class="rag-section scrollbar">
                     <!-- 团队选择 -->
                     <div class="rag-card" style="grid-column: 1 / -1;">
-                        <h3>法律多智能体系统</h3>
-                        <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
+                        <h3 data-i18n="multiagent.title">法律多智能体系统</h3>
+                        <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;" data-i18n="multiagent.description">
                             选择法律任务，上传合同或材料，由法律多智能体团队完成审查、检索、合规分析和修改建议。
                         </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>法律服务团队：</label>
+                                <label data-i18n="multiagent.team.label">法律服务团队：</label>
                                 <select id="collaborationTeam" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;" onchange="updateTeamInfo()">
-                                    <option value="legal_contract_review" selected>法律合同审查团队</option>
+                                    <option value="legal_contract_review" selected data-i18n="multiagent.team.legal_contract_review">法律合同审查团队</option>
                                 </select>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>多智能体处理模式：</label>
+                                <label data-i18n="multiagent.mode.label">多智能体处理模式：</label>
                                 <select id="collaborationMode" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                    <option value="hierarchical">🏢 层级协作（推荐）</option>
-                                    <option value="sequential">🔄 顺序协作</option>
-                                    <option value="parallel">⚡ 并行协作</option>
-                                    <option value="peer_to_peer">🤝 对等协作</option>
-                                    <option value="hybrid">🔀 混合模式</option>
+                                    <option value="hierarchical" data-i18n="mode.hierarchical.label">🏢 层级协作（推荐）</option>
+                                    <option value="sequential" data-i18n="mode.sequential.label">🔄 顺序协作</option>
+                                    <option value="parallel" data-i18n="mode.parallel.label">⚡ 并行协作</option>
+                                    <option value="peer_to_peer" data-i18n="mode.peer_to_peer.label">🤝 对等协作</option>
+                                    <option value="hybrid" data-i18n="mode.hybrid.label">🔀 混合模式</option>
                                 </select>
                             </div>
                         </div>
 
                         <div style="background: #eef2ff; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4f46e5;">
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>关联资料库：</label>
+                                <label data-i18n="kb.selector.label">关联资料库：</label>
                                 <select id="multiAgentKnowledgeBase" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;">
-                                    <option value="">不使用资料库</option>
+                                    <option value="" data-i18n="kb.selector.none">不使用资料库</option>
                                 </select>
-                                <div style="margin-top: 8px; color: #4338ca; font-size: 13px;">
+                                <div style="margin-top: 8px; color: #4338ca; font-size: 13px;" data-i18n="kb.selector.help">
                                     选择资料库后，法律依据检索员和合规审查专员会自动检索相关资料。
                                 </div>
                             </div>
                             <label class="checkbox-group" style="margin-bottom: 12px; color: #4338ca; font-size: 13px;">
                                 <input type="checkbox" id="multiAgentIncludePublicKnowledge" checked>
-                                <span>自动包含可读公共知识库</span>
+                                <span data-i18n="kb.include_public">自动包含可读公共知识库</span>
                             </label>
-                            <button class="btn btn-secondary" onclick="loadAllCollections()" type="button">
+                            <button class="btn btn-secondary" onclick="loadAllCollections()" type="button" data-i18n="action.refresh_knowledge_bases">
                                 刷新资料库
                             </button>
                         </div>
 
                         <div id="legalTaskSection" style="display: none; background: #fff8e6; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>请选择要完成的法律任务：</label>
+                                <label data-i18n="legal_task.selector.label">请选择要完成的法律任务：</label>
                                 <select id="legalTaskType" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;" onchange="applyLegalTaskTemplate()">
-                                    <option value="">-- 请选择法律任务 --</option>
-                                    <option value="contract_review">合同审查</option>
-                                    <option value="risk_identification">合同风险识别</option>
-                                    <option value="revision_suggestions">修改建议与替代条款</option>
-                                    <option value="legal_research">法律依据检索</option>
-                                    <option value="compliance_analysis">合规风险分析</option>
-                                    <option value="review_summary">审查结论摘要</option>
-                                    <option value="legal_document_generation">法律文书生成</option>
-                                    <option value="redline_comparison">红线比对</option>
-                                    <option value="approval_flow_suggestion">法务审批流建议</option>
+                                    <option value="" data-i18n="legal_task.selector.placeholder">-- 请选择法律任务 --</option>
+                                    <option value="contract_review" data-i18n="legal_task.contract_review.label">合同审查</option>
+                                    <option value="risk_identification" data-i18n="legal_task.risk_identification.label">合同风险识别</option>
+                                    <option value="revision_suggestions" data-i18n="legal_task.revision_suggestions.label">修改建议与替代条款</option>
+                                    <option value="legal_research" data-i18n="legal_task.legal_research.label">法律依据检索</option>
+                                    <option value="compliance_analysis" data-i18n="legal_task.compliance_analysis.label">合规风险分析</option>
+                                    <option value="review_summary" data-i18n="legal_task.review_summary.label">审查结论摘要</option>
+                                    <option value="legal_document_generation" data-i18n="legal_task.legal_document_generation.label">法律文书生成</option>
+                                    <option value="redline_comparison" data-i18n="legal_task.redline_comparison.label">红线比对</option>
+                                    <option value="approval_flow_suggestion" data-i18n="legal_task.approval_flow_suggestion.label">法务审批流建议</option>
                                 </select>
                                 <div id="legalTaskDescription" style="display: none; margin-top: 10px; color: #92400e; font-size: 13px;"></div>
                             </div>
@@ -2133,8 +2133,8 @@
                             <div id="legalAgentSelection" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid #fde68a;">
                                 <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px;">
                                     <div>
-                                        <div style="font-weight: 600; color: #92400e; font-size: 14px;">参与智能体</div>
-                                        <div id="legalAgentSelectionStatus" style="margin-top: 4px; color: #92400e; font-size: 12px;">正在加载法律智能体策略...</div>
+                                        <div style="font-weight: 600; color: #92400e; font-size: 14px;" data-i18n="multiagent.agent_selection.title">参与智能体</div>
+                                        <div id="legalAgentSelectionStatus" style="margin-top: 4px; color: #92400e; font-size: 12px;" data-i18n="multiagent.agent_selection.loading">正在加载法律智能体策略...</div>
                                     </div>
                                     <button
                                         class="btn btn-sm btn-outline"
@@ -2142,6 +2142,7 @@
                                         onclick="restoreLegalAgentDefaults()"
                                         type="button"
                                         style="white-space: nowrap;"
+                                        data-i18n="action.restore_recommended_agents"
                                     >
                                         恢复当前任务推荐
                                     </button>
@@ -2153,7 +2154,7 @@
 
                         <div id="legalFileSection" style="display: none; background: #f0fdf4; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #22c55e;">
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>合同或法律材料文件：</label>
+                                <label data-i18n="contract.file.label">合同或法律材料文件：</label>
                                 <input
                                     type="file"
                                     id="legalContractFile"
@@ -2161,21 +2162,22 @@
                                     style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;"
                                 />
                             </div>
-                            <button class="btn btn-secondary" onclick="parseLegalContractFile()" id="legalFileParseBtn" type="button">
+                            <button class="btn btn-secondary" onclick="parseLegalContractFile()" id="legalFileParseBtn" type="button" data-i18n="action.parse_contract_file">
                                 上传并解析合同文件
                             </button>
                             <details style="margin-top: 12px;">
-                                <summary style="cursor: pointer; color: #166534; font-size: 13px;">服务器路径解析</summary>
+                                <summary style="cursor: pointer; color: #166534; font-size: 13px;" data-i18n="contract.server_path.summary">服务器路径解析</summary>
                                 <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
-                                    <label>合同或法律材料文件路径：</label>
+                                    <label data-i18n="contract.server_path.label">合同或法律材料文件路径：</label>
                                     <input
                                         type="text"
                                         id="legalFilePath"
+                                        data-i18n-placeholder="contract.server_path.placeholder"
                                         placeholder="请输入服务器可访问的文件路径，例如：C:/Users/.../contract.pdf 或 /mnt/c/Users/.../contract.txt"
                                         style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px;"
                                     />
                                 </div>
-                                <button class="btn btn-secondary" onclick="parseLegalContractFileFromPath()" type="button">
+                                <button class="btn btn-secondary" onclick="parseLegalContractFileFromPath()" type="button" data-i18n="action.parse_contract_path">
                                     按服务器路径解析
                                 </button>
                             </details>
@@ -2184,7 +2186,7 @@
 
                         <!-- 团队信息 -->
                         <div id="teamInfoCard" style="display: none; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 12px; color: #495057;">法律专家团队</h4>
+                            <h4 style="margin-bottom: 12px; color: #495057;" data-i18n="multiagent.team_info.title">法律专家团队</h4>
                             <div id="teamDescription" style="margin-bottom: 12px; color: #6c757d;"></div>
                             <div id="teamAgents" style="margin-bottom: 12px;"></div>
                             <div id="teamUseCases"></div>
@@ -2192,9 +2194,10 @@
 
                         <!-- 输入区域 -->
                         <div class="form-group">
-                            <label>补充说明或具体问题：</label>
+                            <label data-i18n="multiagent.task.label">补充说明或具体问题：</label>
                             <textarea
                                 id="collaborationTask"
+                                data-i18n-placeholder="multiagent.task.placeholder"
                                 placeholder="你可以补充审查重点，例如：重点关注付款条款、违约责任、数据合规、知识产权归属、争议解决方式等。选择法律任务后，系统会自动填充标准提示词，你仍然可以继续修改。"
                                 style="width: 100%; height: 150px; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; font-size: 14px; resize: vertical;"
                             ></textarea>
@@ -2202,16 +2205,16 @@
                         
                         <!-- 执行按钮 -->
                         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                            <button class="btn btn-primary" onclick="startCollaboration()" id="collaborationStartBtn">
+                            <button class="btn btn-primary" onclick="startCollaboration()" id="collaborationStartBtn" data-i18n="action.start_review">
                                 开始多智能体审查
                             </button>
-                            <button class="btn btn-secondary" onclick="showTeamDetails()">
+                            <button class="btn btn-secondary" onclick="showTeamDetails()" data-i18n="action.show_team">
                                 查看法律专家团队
                             </button>
-                            <button class="btn btn-secondary" onclick="showModeDetails()">
+                            <button class="btn btn-secondary" onclick="showModeDetails()" data-i18n="action.show_mode">
                                 查看处理模式
                             </button>
-                            <button class="btn btn-outline" onclick="clearCollaborationResult()">
+                            <button class="btn btn-outline" onclick="clearCollaborationResult()" data-i18n="action.clear_review_result">
                                 清除审查结果
                             </button>
                         </div>
@@ -2219,41 +2222,41 @@
 
                     <!-- 协作进度 -->
                     <div id="collaborationProgressCard" class="rag-card" style="display: none; grid-column: 1 / -1;">
-                        <h4 style="margin-bottom: 16px; color: #495057;">审查进度</h4>
+                        <h4 style="margin-bottom: 16px; color: #495057;" data-i18n="result.progress.title">审查进度</h4>
                         <div id="collaborationTeamInfo" style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #007bff;">
-                            <div style="font-weight: 600; margin-bottom: 8px;">法律专家团队加载中...</div>
+                            <div style="font-weight: 600; margin-bottom: 8px;" data-i18n="result.progress.team_loading">法律专家团队加载中...</div>
                         </div>
-                        <div id="collaborationStatus" style="color: #6c757d; font-size: 14px;">准备开始法律审查...</div>
+                        <div id="collaborationStatus" style="color: #6c757d; font-size: 14px;" data-i18n="result.progress.ready">准备开始法律审查...</div>
                     </div>
 
                     <!-- 最终结果 -->
                     <div id="collaborationResultCard" class="rag-card" style="display: none; grid-column: 1 / -1; border: 1px solid #bbf7d0; box-shadow: 0 10px 30px rgba(22, 101, 52, 0.10);">
-                        <h4 style="margin-bottom: 16px; color: #166534; font-size: 20px;">法律审查报告</h4>
+                        <h4 style="margin-bottom: 16px; color: #166534; font-size: 20px;" data-i18n="result.report.title">法律审查报告</h4>
 
                         <div style="background: #f0fdf4; padding: 22px; border-radius: 10px; border-left: 5px solid #16a34a; margin-bottom: 18px;">
-                            <h4 style="margin-bottom: 12px; color: #155724;">最终审查结论</h4>
+                            <h4 style="margin-bottom: 12px; color: #155724;" data-i18n="result.final_conclusion.title">最终审查结论</h4>
                             <div id="collaborationFinalOutput" class="markdown-content"></div>
                         </div>
 
                         <!-- 操作按钮 -->
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
-                            <button class="btn btn-secondary" onclick="copyCollaborationResult()">
+                            <button class="btn btn-secondary" onclick="copyCollaborationResult()" data-i18n="action.copy_report">
                                 复制报告
                             </button>
-                            <button class="btn btn-secondary" onclick="downloadCollaborationResult()">
+                            <button class="btn btn-secondary" onclick="downloadCollaborationResult()" data-i18n="action.download_report">
                                 下载报告
                             </button>
-                            <button class="btn btn-secondary" onclick="showCollaborationDetails()">
+                            <button class="btn btn-secondary" onclick="showCollaborationDetails()" data-i18n="action.show_collaboration_details">
                                 查看协作详情
                             </button>
                         </div>
 
                         <!-- 执行统计 -->
                         <div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 12px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 12px;">
-                            <span>审查状态：<strong id="collaborationSuccess">-</strong></span>
-                            <span>参与专家：<strong id="agentCount">-</strong></span>
-                            <span>协作记录：<strong id="messageCount">-</strong></span>
-                            <span>审查耗时：<strong id="collaborationTime">-</strong></span>
+                            <span><span data-i18n="result.stats.status">审查状态：</span><strong id="collaborationSuccess">-</strong></span>
+                            <span><span data-i18n="result.stats.agents">参与专家：</span><strong id="agentCount">-</strong></span>
+                            <span><span data-i18n="result.stats.messages">协作记录：</span><strong id="messageCount">-</strong></span>
+                            <span><span data-i18n="result.stats.duration">审查耗时：</span><strong id="collaborationTime">-</strong></span>
                         </div>
                     </div>
 
@@ -2261,10 +2264,10 @@
                     <div id="agentContributionsCard" class="rag-card" style="display: none; grid-column: 1 / -1;">
                         <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px;">
                             <div>
-                                <h4 style="margin-bottom: 4px; color: #495057;">各法律专家分析</h4>
-                                <div id="agentContributionsSummary" style="color: #6c757d; font-size: 13px;">默认折叠，展开后查看各专家的完整分析过程。</div>
+                                <h4 style="margin-bottom: 4px; color: #495057;" data-i18n="result.contributions.title">各法律专家分析</h4>
+                                <div id="agentContributionsSummary" style="color: #6c757d; font-size: 13px;" data-i18n="result.contributions.summary">默认折叠，展开后查看各专家的完整分析过程。</div>
                             </div>
-                            <button class="btn btn-sm btn-outline" onclick="toggleCollaborationSection('agentContributionsList', 'agentContributionsToggle')" id="agentContributionsToggle" type="button">展开</button>
+                            <button class="btn btn-sm btn-outline" onclick="toggleCollaborationSection('agentContributionsList', 'agentContributionsToggle')" id="agentContributionsToggle" type="button" data-i18n="action.expand">展开</button>
                         </div>
                         <div id="agentContributionsList" style="display: none; max-height: 600px; overflow-y: auto;" class="scrollbar"></div>
                     </div>
@@ -2273,10 +2276,10 @@
                     <div id="collaborationMessagesCard" class="rag-card" style="display: none; grid-column: 1 / -1;">
                         <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px;">
                             <div>
-                                <h4 style="margin-bottom: 4px; color: #495057;">多智能体协作过程</h4>
-                                <div id="messagesSummary" style="color: #6c757d; font-size: 13px;">默认折叠，展开后查看专家之间的任务分发和响应记录。</div>
+                                <h4 style="margin-bottom: 4px; color: #495057;" data-i18n="result.messages.title">多智能体协作过程</h4>
+                                <div id="messagesSummary" style="color: #6c757d; font-size: 13px;" data-i18n="result.messages.summary">默认折叠，展开后查看专家之间的任务分发和响应记录。</div>
                             </div>
-                            <button class="btn btn-sm btn-outline" onclick="toggleCollaborationSection('messagesList', 'messagesToggle')" id="messagesToggle" type="button">展开</button>
+                            <button class="btn btn-sm btn-outline" onclick="toggleCollaborationSection('messagesList', 'messagesToggle')" id="messagesToggle" type="button" data-i18n="action.expand">展开</button>
                         </div>
                         <div id="messagesList" style="display: none; max-height: 400px; overflow-y: auto;" class="scrollbar"></div>
                     </div>

@@ -10,10 +10,13 @@ INDEX_HTML = STATIC_DIR / "index.html"
 GLOBAL_HTML = STATIC_DIR / "global.html"
 BUILD_SCRIPT = PROJECT_ROOT / "scripts/build_global_html.py"
 
-LANG_HEADER_SNIPPET = """            const lang = localStorage.getItem('gaia_lang');
+DOMESTIC_LANG_HEADER_SNIPPET = """            const lang = localStorage.getItem('gaia_lang');
             if (lang) {
                 headers.set('X-User-Lang', lang);
             }"""
+
+GLOBAL_LANG_HEADER_SNIPPET = """            const lang = normalizeFrontendLang(localStorage.getItem('gaia_lang'));
+            headers.set('X-User-Lang', lang);"""
 
 
 def _api_fetch_block(path: Path) -> str:
@@ -24,11 +27,11 @@ def _api_fetch_block(path: Path) -> str:
 
 
 def test_global_html_apifetch_injects_x_user_lang():
-    assert LANG_HEADER_SNIPPET in _api_fetch_block(GLOBAL_HTML)
+    assert GLOBAL_LANG_HEADER_SNIPPET in _api_fetch_block(GLOBAL_HTML)
 
 
 def test_index_html_apifetch_conditional_inject():
-    assert LANG_HEADER_SNIPPET in _api_fetch_block(INDEX_HTML)
+    assert DOMESTIC_LANG_HEADER_SNIPPET in _api_fetch_block(INDEX_HTML)
 
 
 def test_build_global_html_output_consistent(tmp_path):
